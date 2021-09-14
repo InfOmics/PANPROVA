@@ -60,7 +60,7 @@ The C++ procedure has to be compiled by typing
 
 The compiled software takes as input
 * a file containing the realtive paths to PEG files from which genes must be extracted. The first genome of the list is used as ancestor
-* the nome of the file to which write the output (the retrieved non-redundant HGT pool)
+* the name of the file to which write the output (the retrieved non-redundant HGT pool)
 
 
 ### Scripts for converting GBK files to PEG files
