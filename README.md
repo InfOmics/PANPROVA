@@ -8,7 +8,7 @@ Gene set variations, sequence variation and horizontal acquisition from a pool o
 ----
 
 PANPROVA is composed of 
-* a core evolution process developd in C++
+* a core evolution process developed in C++
 * a C++ procedure for retrieving a pool of non-reduntant genes extracted from a give set of genomes
 * scripts for converting GBK files to the input format of the evolutionsfotware
 * 3 examples and related scripts for extracting evolution statistics
