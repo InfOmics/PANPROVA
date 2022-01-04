@@ -187,6 +187,18 @@ Start and end positions are integer numbers and always refer to position 0 of th
 
 ## Examples
 
+Examples are locate in the dicrectory `examples` of this repository.
+
+Input genomes are located in the directory `exmaples/genomes`. They are in PEg format produced from GBFF files via the `gb2peg.py` script.
+
+### Example 1 : HGT pool extractiona and evolution from a Mycoplamsa genitalium genome
+The example retrieves the HGT pool from two genomes (bacillus_subtilis_168 and campylobacter_jejuni_NCTC11168).
+Then it runs the evolution by using the mycoplasma_genitalium_G37 genome as root genome.
+A population of 1000 genomes is generated with default evolutionary parameters.
+To run the example, enter in the example directory and run
+```
+bash run_example.sh
+```
 
 ----
 
