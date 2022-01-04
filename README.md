@@ -68,7 +68,7 @@ The parameters of the `PANPROVA.sh` script are:
 The following output is produced by the tool
 * `[output_prefix].genome_parents`: which reports the phylogenomics relationships between the genomes of the generated population. 
 * `[output_prefix].tree.xml`: reports the phylogenomics relationships in the PhyloXML format. 
-* `[output_prefix].tree.xml`: contains an image of the phylogenomics relationships.
+* `[output_prefix].tree.xml.png`: contains an image of the phylogenomics relationships.
 * `[output_prefix].gene_parents`: the parenting relationships between all the genetic sequences contained in the produced population. 
 * `[output_prefix].genome_sequence`: the genomic sequences of the produced population. 
 * `[output_prefix].genes`: information regarding the genes of the produced genomes: their location within their genome and their nucleotide sequence.
