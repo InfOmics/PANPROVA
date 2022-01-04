@@ -139,6 +139,42 @@ Lastly, the new genome is added to the population and the process is repeated un
 
 ----
 
+## File formats and internal identifiers
+
+### .PEG
+A .PEG file contains the nucleotide sequence of a genome together with the coordinates of its genes. 
+The first line of the file is the nucleotide sequence, which must be in upper case and can only contain the following characters: A,C,G,T,N.
+Subsequent lines report genetic coordinates, each gene for each line. Coordinates are in the form  start_position end_position strand, which are separated by a space character.
+Start and end positions are integer numbers and always refer to position 0 of the 5’-3’ strand, even if the gene is located in the other strand. The values of the strand are 1 or -1 for 5’-3’ and 3’-5’ respectively.
+ 
+### .genome_parents (or .tree)
+A genome parents file reports the parenting information of the genomes in the produced population. 
+The root genome is identified with the number 0 and its parent is -1.
+The file contains multiple lines, one for each genome in the collection.
+Each line contains two integers separated by a space character. The first integer is the identifier of a given genome, the second integer is the identifier of its parent genome.
+
+### .genome_sequences
+A genome sequences file reports the nucleotide sequence of each generated genome.
+The file contains multiple lines, one for each genome. In each line, the numeric identifier of the genome is followed by a space and subsequently by the entire nucleotide sequence of the genome.
+
+### .gene_parents
+A .gene_parents file reports the parenting information of every gene that is present in the produced population of genomes.
+Each line of the file reports the parenting information regarding a single gene, and it is in the format  genome_id gene_id parent_genome_id parent_gene_id.
+The four identifiers are separated by a space character.
+Genes of the root genome have -1 -1 parent, and the same applies to genes that have been horizontally acquired.
+The parent of a duplicated gene is the paralog gene that is the source of the duplication, thus the gene that was already present in the same genome. This means that only for duplicated genes genome_id is equal to parent_genome_id.
+
+### .genes
+A .gene file contains the information regarding all the genes that are presented in the generated population. Each line of the file regards a single gene.
+Lines are in the form:
+```
+genome_id:gene_id:(start_poistion,end_poistion,strand) sequence
+```
+Thus, there is a space between the first part of the line and the nucleotide sequence of the given gene.
+Start and end positions are integer numbers and always refer to position 0 of the 5’-3’ strand, even if the gene is located in the other strand. The values of the strand are 1 or -1 for 5’-3’ and 3’-5’ respectively.
+
+----
+
 ## Utilities
 
 * `gff2peg.py ifile.gff ofile.peg`: a Python script for converting a GFF+FASTA file into the PEG file
@@ -147,7 +183,12 @@ Lastly, the new genome is added to the population and the process is repeated un
 * `tree2phyloxml.py ifile.genome_parents ofile.phyloxml`: a Python script to convert internal tree formato to PhyloXML
 * `fragment.py ifile.gbff ofile.fasta`: simulate a fragmentation of a given genome provided as a genebank file. The result is a FASTa file containing the fragments. For each fragment, the file also reports the start and end coordinated within the original genome. Information regarding input genes and their correspondence with fragments are printed on screen. 
 
+----
 
+## Examples
+
+
+----
 
 
 ## License
