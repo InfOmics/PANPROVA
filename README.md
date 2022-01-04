@@ -187,8 +187,8 @@ Start and end positions are integer numbers and always refer to position 0 of th
 
 * `gff2peg.py ifile.gff ofile.peg`: a Python script for converting a GFF+FASTA file into the PEG file
 * `gbk2peg.py ifile.gbk ofile.peg`: a Python script for converting a GBK file into a PEG file.
-* `phyloxml2tree.py ifile.phyloxml ofile.genome_parents`: a Python script for extracting the parenthood information from a PhyloXML file into the internal format of PANPROVA (PEG) for specifying it. The phylogenomic distance, as well as any other information that does not regarding parenthood, is not taken into account. Only rooted trees can be used.
-* `tree2phyloxml.py ifile.genome_parents ofile.phyloxml`: a Python script to convert internal tree formato to PhyloXML
+* `phyloxml2tree.py ifile.phyloxml ofile.genome_parents`: a Python script for extracting the parenthood information from a PhyloXML file into the internal format of PANPROVA (PEG). The phylogenomic distance, as well as any other information that does not regarding parenthood, is not taken into account. Only rooted trees can be used.
+* `tree2phyloxml.py ifile.genome_parents ofile.phyloxml`: a Python script to convert internal tree format to PhyloXML
 * `fragment.py ifile.gbff ofile.fasta`: simulate a fragmentation of a given genome provided as a genebank file. The result is a FASTa file containing the fragments. For each fragment, the file also reports the start and end coordinated within the original genome. Information regarding input genes and their correspondence with fragments are printed on screen. 
 
 ----
