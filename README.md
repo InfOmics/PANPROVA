@@ -19,7 +19,7 @@ The user can specify the probability of a gene to be mutated, thus for each muta
 
 ## Requirements
 
-Before running ***PARPROVA***, please verify that the following software is installed on your Linux system
+Before running ***PANPROVA***, please verify that the following software is installed on your Linux system
 * bash
 * g++ version 6 or higher
 * python version 3.7 or higher
