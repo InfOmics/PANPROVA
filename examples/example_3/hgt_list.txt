@@ -1,0 +1,8 @@
+../genomes/escherichia_coli_O157H7.peg
+../genomes/escherichia_coli_B_C3029.peg
+../genomes/escherichia_coli_DH1.peg
+../genomes/escherichia_coli_M12.peg
+../genomes/escherichia_coli_S88.peg
+../genomes/escherichia_coli_C.peg
+../genomes/escherichia_coli_NU14.peg
+../genomes/escherichia_coli_UM146.peg

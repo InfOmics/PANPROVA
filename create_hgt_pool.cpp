@@ -18,6 +18,7 @@
 
 void usage(std::string cmd){
     std::cout<<"Usage: "<<cmd<<" ilistfile ofile\n";
+    std::cout<<"ilistifle contains paths to PEG files, one per line. The first one is the root genome.";
 }
 
 
@@ -79,7 +80,6 @@ public:
         int c;
         int state = 0;
         int start, end;
-        char strand;
         while(file >> c){
             if(state == 0){
                 start = c;
@@ -117,14 +117,17 @@ public:
         std::vector<std::string> *v = new std::vector<std::string>();
         for(auto & locus : this->loci){
             if(locus.strand == 1){
-                std::string s = this->sequence.substr(locus.start, locus.end-locus.start+1);
+                std::string s = this->sequence.substr(locus.start, locus.end-locus.start);
                 v->push_back(s);
             }
             else{
-                std::string s = this->sequence.substr(locus.start, locus.end-locus.start+1);
+                std::string t = this->sequence.substr(locus.start, locus.end-locus.start);
+
+                std::string s = this->sequence.substr(locus.start, locus.end-locus.start);
                 for(int i=0; i<s.size(); i++){
-                    s[i] = Genome::rc_symbol( this->sequence[ locus.end+1-i] );
+                    s[i] = Genome::rc_symbol( t[ s.size()-1-i ] );
                 }
+
                 v->push_back(s);
             }
         }

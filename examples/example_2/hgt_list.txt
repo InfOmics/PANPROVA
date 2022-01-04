@@ -1,0 +1,8 @@
+../genomes/escherichia_coli_O157H7.peg
+../genomes/mycoplasma_genitalium_G37.peg
+../genomes/bacillus_subtilis_168.peg
+../genomes/campylobacter_jejuni_NCTC11168.peg
+../genomes/moraxella_osloensis_CCUG350.peg
+../genomes/carsonella_ruddii_JRPAMB4.peg
+../genomes/pseudmonas_aeruginosa_PAO1.peg
+../genomes/salmonella_enterica_LT2.peg
