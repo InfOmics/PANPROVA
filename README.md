@@ -220,7 +220,7 @@ To run the example, enter in the example directory and run `bash run_example.sh`
 A previously produced output is present. It shows the obtained results by the images time.png and memory.png.
 The example was run on a Intel(R) Core(TM) i7-5960x with 64-Gb of RAM machine running a Ubuntu 64-bit 18.04 LTS system.
 
-### Test evolve time: running timefor producing populaitons of different sizes of example 1
+### Test evolve time: running tim efor producing populations of different sizes of example 1
 This examples investigates the running time of the evolvution precedure on genrating populaiton with different number of genomes.
 It reflects the configuration fo example 1 except for the number of generated genomes.
 To run the example, enter in the example directory and run `bash run_example.sh`.
