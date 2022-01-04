@@ -192,8 +192,14 @@ Start and end positions are integer numbers and always refer to position 0 of th
 
 
 ## License
-PANPROVA is distributed under the MIT license. This means that it is free for both academic and commercial use. Note however that some third party components in RI require that you reference certain works in scientific publications.
-You are free to link or use RI inside source code of your own program. If do so, please reference (cite) PANPROVA and this website. We appreciate bug fixes and would be happy to collaborate for improvements. 
+PANPROVA is distributed under the MIT license. This means that it is free for both academic and commercial use. Note however that some third party components in PANPROVA require that you reference certain works in scientific publications.
+You are free to link or use PANPROVA inside source code of your own program. If do so, please reference (cite) PANPROVA and this website. We appreciate bug fixes and would be happy to collaborate for improvements. 
 [License](https://raw.githubusercontent.com/InfOmics/PANPROVA/master/LICENSE)
 
 ## Citation
+
+To appear
+
+## References
+
+[1] Bonnici, V., Giugno, R., & Manca, V. (2018). PanDelos: A dictionary-based method for pan-genome content discovery. BMC bioinformatics, 19(15), 47-59.
