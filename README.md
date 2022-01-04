@@ -66,7 +66,10 @@ The parameters of the `PANPROVA.sh` script are:
 <br/>
 
 The following output is produced by the tool
-* `[output_prefix].genome_parents`: which reports the phylogenomics relationships between the genomes of the generated population. [output_prefix].gene_parents: the parenting relationships between all the genetic sequences contained in the produced population. 
+* `[output_prefix].genome_parents`: which reports the phylogenomics relationships between the genomes of the generated population. 
+* `[output_prefix].tree.xml`: reports the phylogenomics relationships in the PhyloXML format. 
+* `[output_prefix].tree.xml`: contains an image of the phylogenomics relationships.
+* `[output_prefix].gene_parents`: the parenting relationships between all the genetic sequences contained in the produced population. 
 * `[output_prefix].genome_sequence`: the genomic sequences of the produced population. 
 * `[output_prefix].genes`: information regarding the genes of the produced genomes: their location within their genome and their nucleotide sequence.
 * `[output_prefix].gene_families`: a file that list the gene families that are present in the generated genomes. Each line is a family. Each gene is identified by a pari reporting the identifier of the genome and the identifier of the gene within the given genome.
@@ -82,6 +85,69 @@ The following output is produced by the tool
 The following picture gives a detailed description of the PANPROVA workflow.
 
 ![Workflow](workflow.png)
+
+The workflow is composed of a set of internal tools, Python scripts and C++ executables, plus some external Python scripts that can be used for file format conversions.
+
+Sections with a yellow background are those internal tools that are in charge of the `PANPROVA.sh` script. 
+
+<br/>
+
+The internal tools are:
+* `create_hgt_pool`: a C++ executable for creating an HGT pool from a set of PEG files.
+* `generate_tree.py`: a Python script for randomly generating a phylogenomic tree of the wanted population.
+* `tree2phyloxml.p`: a toll for converting a PANPROVA tre into a PhyloXML file and for genrating an image showing it.
+* `evolve`: a C++ executable that implements the evolution procedure. 
+* `get_pan_distrs.py`: a Python script for retrieving pangenomic information from the generated population and for creating the corresponding output.
+* `pegs2gxx.py`: a Python script for converting the generated genomes into the GBK and GFF+FASTA formats.
+
+----
+
+### Extractiong of HGT pool
+
+The pool of HGT genes to be used during the evolution simulation is extracted from a set of input genomes (in PEG format) and by taking into account genes that are already present in the root genome (still in PEG format).
+The following picture illustrates the main steps of the extraction procedure.
+
+![createhgt](createhgt.png)
+
+From the given input genomes, a set of genes that are not similar to the genes present in the root genome is initially extracted. Then a nonredundant pool of genes is created by discarding genes that are similar to other genes in the initial set. 
+The similarity among nucleotide genetic sequences is computed by taking into account the similarity between their k-mer content [1]. In particular, a Jaccard similarity between k-mer multisets of two genetic sequences is computed. Genes with a similarity greater than 0.3 with root genes are discarded. Successively, we set an arbitrary order of the surviving genes. Then, each gene is compared with genes that come after it in the ordering. If the similarity is greater than 0.5, then the latter gene is marked to be discarded. At the end of the scanning, all the genes that were marked are removed from the HGT pool.
+
+### Evolution procedure
+
+The workflow of the evolution procedure, together with examples of intermediate data, is shown in the following figure. 
+
+![evolve](evolve.png)
+
+The workflow refers to the case in which the generation of the random phylogenomic tree is integrated into the process.
+<br/>
+At each step, a genome from the current population is chosen to be the parent of the next genome to be created. Thus, the parent genome is cloned and an initial version of the child genome is produced (see example 1). 
+<br/>
+Then, according to a given probability, each vertically transmitted gene is selected to be altered or not. If yes, its loci are variated according to a given variation percentage. Possible variations are substitution (in accordance with the specified probability substitution matrix), insertion or deletion. Any modification is applied such that it does not produce or modify any star or stop codon of genes that overlap the gene that is currently modified. Overlapping genes may reside on both strands.
+<br/>
+Subsequently, variated vertically transmitted genes are selected to be duplicated within the new genome according to a given probability. 
+<br/>
+Duplication, insertion of HGT genes and transposition of genes is made such that a random locus of the genome is chosen. the locus must not be covered by any other gene. Thus, the genetic sequence of the gene, together with start and stop codons, is inserted at the selected locus. See examples 2 and 4.
+The resultant gene set is modified by a given percentage. If the set is composed of n genes and 2% of the set has to be variated, then (n/100)x2 variation operations are performed. such operation can be a horizontal gene acquisition of a gene removal. If the probability that an operation is acquisition is p, then the probability that the operation is a removal is 1-p.
+<br/>
+In the case of gene removal, a gene is randomly chosen to be removed. All the nucleotides that belong to the selected gene are removed from the genome if they do not overlap other genes. See example 3.
+<br/>
+In case of gene acquisition, if the HGT pool is not empty, a genetic sequence is randomly chosen from the pool, inserted in the genome and removed from the pool. See example 4. If the HGT pool is empty, a purely random nucleotide sequence is generated and inserted within the genome.
+<br/>
+Subsequently, the resultant set of genes is randomly picked for transposition according to a given probability. 
+<br/>
+Lastly, the new genome is added to the population and the process is repeated until the desired number of genomes is produced. Every time a new genome is produced, its parenting relationships are recorded. In particular, the information regarding the genome from which it has been cloned is stored. In addition, for each gene in the new genome, the information regarding the parent gene is stored. for vertically transmitted genes, such information reports the identifiers of the gene present in the parent genome. For duplicated genes, such information reports the identification of the paralog gene from which the gene has been duplicated. for horizontally transmitted genes, such information is null. See example 5.
+
+----
+
+## Utilities
+
+* `gff2peg.py ifile.gff ofile.peg`: a Python script for converting a GFF+FASTA file into the PEG file
+* `gbk2peg.py ifile.gbk ofile.peg`: a Python script for converting a GBK file into a PEG file.
+* `phyloxml2tree.py ifile.phyloxml ofile.genome_parents`: a Python script for extracting the parenthood information from a PhyloXML file into the internal format of PANPROVA (PEG) for specifying it. The phylogenomic distance, as well as any other information that does not regarding parenthood, is not taken into account. Only rooted trees can be used.
+* `tree2phyloxml.py ifile.genome_parents ofile.phyloxml`: a Python script to convert internal tree formato to PhyloXML
+* `fragment.py ifile.gbff ofile.fasta`: simulate a fragmentation of a given genome provided as a genebank file. The result is a FASTa file containing the fragments. For each fragment, the file also reports the start and end coordinated within the original genome. Information regarding input genes and their correspondence with fragments are printed on screen. 
+
+
 
 
 ## License
