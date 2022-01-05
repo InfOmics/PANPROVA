@@ -649,12 +649,12 @@ int main(int argc, char** argv){
                                     //new_genome->sequence[current_start + p + current_shift +2] = cod[2];
 
                                     do{
-                                        new_genome->sequence[current_start + p + current_shift] = 
-                                            substitute( new_genome->sequence[current_start + p + current_shift],subm);
+                                        //new_genome->sequence[current_start + p + current_shift] = 
+                                        //    substitute( new_genome->sequence[current_start + p + current_shift],subm);
                                         new_genome->sequence[current_start + p + current_shift +1] = 
                                             substitute( new_genome->sequence[current_start + p + current_shift +1],subm);
-                                        new_genome->sequence[current_start + p + current_shift +2] = 
-                                            substitute( new_genome->sequence[current_start + p + current_shift +2],subm);
+                                        //new_genome->sequence[current_start + p + current_shift +2] = 
+                                        //    substitute( new_genome->sequence[current_start + p + current_shift +2],subm);
                                     }while(to_revert(new_genome->sequence, current_start + p + current_shift ));
                                 }
                             }
