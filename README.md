@@ -197,7 +197,7 @@ Start and end positions are integer numbers and always refer to position 0 of th
 
 Examples are locate in the dicrectory `examples` of this repository.
 
-Input genomes are located in the directory `exmaples/genomes`. They are in PEg format produced from GBFF files via the `gb2peg.py` script.
+Input genomes are located in the directory `exmaples/genomes`. They are in PEG format produced from GBFF files via the `gb2peg.py` script.
 
 ### Example 1 : HGT pool extraction (2 genomes) and evolution from a Mycoplasma genitalium genome
 The example retrieves the HGT pool from two genomes (bacillus_subtilis_168 and campylobacter_jejuni_NCTC11168).
