@@ -75,7 +75,7 @@ The following output is produced by the tool
 * `[output_prefix].gene_families`: a file that list the gene families that are present in the generated genomes. Each line is a family. Each gene is identified by a pari reporting the identifier of the genome and the identifier of the gene within the given genome.
 * `[output_prefix].family_presence`: a table reporting for each gene family its presence within each generated genome. Each row is a gene family  and each column is a genome. Each cell reports the presence of the given family within the given genome.
 * `[output_prefix].pan_distribution`: the pangenomic distribution of genes in the generated population. If X genomes are present in the population, the distribution reports, for each number between 1 and X, the number of genes that are present in a given number of genomes. It is a two-columns text file where the first column is the number of genomes, while the second column is the number of genes that are present in exactly that specified number of genomes.
-* `[output_prefix]/genomes/*.GBFF`: the produced genomes in GBK format.
+* `[output_prefix]/genomes/*.GBFF`: the produced genomes in GBFF format.
 * `[output_prefix]/genomes/*.GFF  [output_prefix]/genomes/*.FASTA`: the produced genomes in GFF+FASTA format.
 
 ----
