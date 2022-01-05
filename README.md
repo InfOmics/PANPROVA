@@ -214,7 +214,7 @@ An HGT pool from 7 Escherichia coli genomes of different strains is extracted.
 the HGT pool is  used to produce a population of 1000 genomes by using escherichia_coli_O157H7 as root genome.
 To run the example, enter in the example directory and run `bash run_example.sh`.
 
-### Test HGT time : creating the HGT pool by increasing the number of input genes
+### Example 4 : creating the HGT pool by increasing the number of input genes
 This exmaple investigates the running time of the HGT creation procedure on varying the number in input genomes and thus the numbr of input genes that must be compared in roder to obtain a unredundant collection fo genetic sequences.
 To run the example, enter in the example directory and run `bash run_example.sh`.
 A previously produced output is present. It shows the obtained results by the images time.png and memory.png.
@@ -224,7 +224,7 @@ The example was run on a Intel(R) Core(TM) i7-5960x with 64-Gb of RAM machine ru
 ![createhgtmemory](examples/example_4_createhgt/memory.png)
 
 
-### Test evolve time: producing populations of different sizes
+### Example 5 : producing populations of different sizes
 This examples investigates the running time of the evolvution precedure on genrating populaiton with different number of genomes.
 It reflects the configuration fo example 1 except for the number of generated genomes.
 To run the example, enter in the example directory and run `bash run_example.sh`.
