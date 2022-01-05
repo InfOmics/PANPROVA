@@ -1,0 +1,179 @@
+12
+----------------------------------------
+Reading root genome...
+Root genome is 580076 nucleotides long, with 476 genetic loci
+gene lenghts are between 114 and 5418 
+----------------------------------------
+Reading HGT pool...
+HGT pool has 0 genes
+----------------------------------------
+Shuffling HGT pool...
+----------------------------------------
+Reading population tree...
+tmp_20/run_phylofile
+----------------------------------------
+Reading substitution matrix...
+../../psubmatrix.txt
+AAAAAAAAAAAAAAAAAAAAAAAAACCCCCCCCCCCCCCCCCCCCCCCCCGGGGGGGGGGGGGGGGGGGGGGGGGTTTTTTTTTTTTTTTTTTTTTTTTT
+AAAAAAAAAAAAAAAAAAAAAAAAACCCCCCCCCCCCCCCCCCCCCCCCCGGGGGGGGGGGGGGGGGGGGGGGGGTTTTTTTTTTTTTTTTTTTTTTTTT
+AAAAAAAAAAAAAAAAAAAAAAAAACCCCCCCCCCCCCCCCCCCCCCCCCGGGGGGGGGGGGGGGGGGGGGGGGGTTTTTTTTTTTTTTTTTTTTTTTTT
+AAAAAAAAAAAAAAAAAAAAAAAAACCCCCCCCCCCCCCCCCCCCCCCCCGGGGGGGGGGGGGGGGGGGGGGGGGTTTTTTTTTTTTTTTTTTTTTTTTT
+----------------------------------------
+Evolving 20 genomes ...
+Generating genome 1 [0]
+parent genome 0
+1 genes deleted
+1026 deleted nucleotides
+4 genes added
+the new genome has a total of 479 genetic loci
+the length of the new genome is 589946 nucleotides
+----------------------------------------
+Generating genome 2 [1]
+parent genome 0
+0 genes deleted
+0 deleted nucleotides
+4 genes added
+the new genome has a total of 480 genetic loci
+the length of the new genome is 593534 nucleotides
+----------------------------------------
+Generating genome 3 [2]
+parent genome 0
+0 genes deleted
+0 deleted nucleotides
+5 genes added
+the new genome has a total of 481 genetic loci
+the length of the new genome is 596084 nucleotides
+----------------------------------------
+Generating genome 4 [3]
+parent genome 0
+1 genes deleted
+619 deleted nucleotides
+5 genes added
+the new genome has a total of 480 genetic loci
+the length of the new genome is 594829 nucleotides
+----------------------------------------
+Generating genome 5 [4]
+parent genome 0
+0 genes deleted
+0 deleted nucleotides
+3 genes added
+the new genome has a total of 480 genetic loci
+the length of the new genome is 589616 nucleotides
+----------------------------------------
+Generating genome 6 [5]
+parent genome 0
+1 genes deleted
+860 deleted nucleotides
+5 genes added
+the new genome has a total of 482 genetic loci
+the length of the new genome is 599634 nucleotides
+----------------------------------------
+Generating genome 8 [6]
+parent genome 0
+0 genes deleted
+0 deleted nucleotides
+5 genes added
+the new genome has a total of 482 genetic loci
+the length of the new genome is 595889 nucleotides
+----------------------------------------
+Generating genome 14 [7]
+parent genome 0
+2 genes deleted
+2685 deleted nucleotides
+5 genes added
+the new genome has a total of 479 genetic loci
+the length of the new genome is 591059 nucleotides
+----------------------------------------
+Generating genome 9 [8]
+parent genome 1
+0 genes deleted
+0 deleted nucleotides
+4 genes added
+the new genome has a total of 484 genetic loci
+the length of the new genome is 604805 nucleotides
+----------------------------------------
+Generating genome 19 [9]
+parent genome 1
+0 genes deleted
+0 deleted nucleotides
+5 genes added
+the new genome has a total of 484 genetic loci
+the length of the new genome is 607907 nucleotides
+----------------------------------------
+Generating genome 7 [10]
+parent genome 2
+0 genes deleted
+0 deleted nucleotides
+5 genes added
+the new genome has a total of 486 genetic loci
+the length of the new genome is 610466 nucleotides
+----------------------------------------
+Generating genome 13 [11]
+parent genome 2
+1 genes deleted
+1136 deleted nucleotides
+4 genes added
+the new genome has a total of 484 genetic loci
+the length of the new genome is 610311 nucleotides
+----------------------------------------
+Generating genome 10 [12]
+parent genome 3
+0 genes deleted
+0 deleted nucleotides
+5 genes added
+the new genome has a total of 487 genetic loci
+the length of the new genome is 611354 nucleotides
+----------------------------------------
+Generating genome 16 [13]
+parent genome 4
+0 genes deleted
+0 deleted nucleotides
+4 genes added
+the new genome has a total of 484 genetic loci
+the length of the new genome is 614734 nucleotides
+----------------------------------------
+Generating genome 15 [14]
+parent genome 8
+0 genes deleted
+0 deleted nucleotides
+3 genes added
+the new genome has a total of 485 genetic loci
+the length of the new genome is 605720 nucleotides
+----------------------------------------
+Generating genome 12 [15]
+parent genome 7
+0 genes deleted
+0 deleted nucleotides
+4 genes added
+the new genome has a total of 490 genetic loci
+the length of the new genome is 626399 nucleotides
+----------------------------------------
+Generating genome 11 [16]
+parent genome 10
+1 genes deleted
+929 deleted nucleotides
+5 genes added
+the new genome has a total of 491 genetic loci
+the length of the new genome is 622905 nucleotides
+----------------------------------------
+Generating genome 17 [17]
+parent genome 12
+0 genes deleted
+0 deleted nucleotides
+5 genes added
+the new genome has a total of 495 genetic loci
+the length of the new genome is 642344 nucleotides
+----------------------------------------
+Generating genome 18 [18]
+parent genome 11
+0 genes deleted
+0 deleted nucleotides
+5 genes added
+the new genome has a total of 496 genetic loci
+the length of the new genome is 630669 nucleotides
+----------------------------------------
+HGT pool has 0 genes
+----------------------------------------
+writing genomic sequences tmp_20/run.genome_sequences ...
+writing genetic parenthood tmp_20/run.gene_parents ...
+writing genetic information tmp_20/run.genes ...

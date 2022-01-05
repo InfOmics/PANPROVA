@@ -1,0 +1,93 @@
+================================================================================
+PANPROVA example: running time on increasing number of generated genomes
+================================================================================
+
+Current paramters are:
+oprefix 
+igenomefile ../genomes/mycoplasma_genitalium_G37.peg
+hgtpoolfile hgtpool
+psubfile ../../psubmatrix.txt
+phylofile 
+ngenomes 1000
+rseed 123456
+genevarprob 0.5
+locvarprob 0.01
+genedupprob 0.001
+gsetvarperc 0.01
+geneaddprob 0.9
+transtable 4
+
+--------------------------------------------------------------------------------
+10
+python3 ../../generate_tree.py 10 123456 tmp_10/run_phylofile
+0:00.03 0.03 12136
+../../evolve ../genomes/mycoplasma_genitalium_G37.peg hgtpool tmp_10/run tmp_10/run_phylofile ../../psubmatrix.txt 0.5 0.01 0.001 0.01 0.9 123456
+0:01.89 1.89 17904
+--------------------------------------------------------------------------------
+20
+python3 ../../generate_tree.py 20 123456 tmp_20/run_phylofile
+0:00.03 0.03 12236
+../../evolve ../genomes/mycoplasma_genitalium_G37.peg hgtpool tmp_20/run tmp_20/run_phylofile ../../psubmatrix.txt 0.5 0.01 0.001 0.01 0.9 123456
+0:04.05 4.05 27196
+--------------------------------------------------------------------------------
+50
+python3 ../../generate_tree.py 50 123456 tmp_50/run_phylofile
+0:00.03 0.03 12204
+../../evolve ../genomes/mycoplasma_genitalium_G37.peg hgtpool tmp_50/run tmp_50/run_phylofile ../../psubmatrix.txt 0.5 0.01 0.001 0.01 0.9 123456
+0:10.64 10.64 52200
+--------------------------------------------------------------------------------
+100
+python3 ../../generate_tree.py 100 123456 tmp_100/run_phylofile
+0:00.03 0.03 12324
+../../evolve ../genomes/mycoplasma_genitalium_G37.peg hgtpool tmp_100/run tmp_100/run_phylofile ../../psubmatrix.txt 0.5 0.01 0.001 0.01 0.9 123456
+0:22.27 22.27 106968
+--------------------------------------------------------------------------------
+200
+python3 ../../generate_tree.py 200 123456 tmp_200/run_phylofile
+0:00.03 0.03 12152
+../../evolve ../genomes/mycoplasma_genitalium_G37.peg hgtpool tmp_200/run tmp_200/run_phylofile ../../psubmatrix.txt 0.5 0.01 0.001 0.01 0.9 123456
+0:45.88 45.88 198388
+--------------------------------------------------------------------------------
+500
+python3 ../../generate_tree.py 500 123456 tmp_500/run_phylofile
+0:00.03 0.03 12268
+../../evolve ../genomes/mycoplasma_genitalium_G37.peg hgtpool tmp_500/run tmp_500/run_phylofile ../../psubmatrix.txt 0.5 0.01 0.001 0.01 0.9 123456
+2:00.63 120.63 480684
+--------------------------------------------------------------------------------
+1000
+python3 ../../generate_tree.py 1000 123456 tmp_1000/run_phylofile
+0:00.03 0.03 12304
+../../evolve ../genomes/mycoplasma_genitalium_G37.peg hgtpool tmp_1000/run tmp_1000/run_phylofile ../../psubmatrix.txt 0.5 0.01 0.001 0.01 0.9 123456
+4:13.83 253.83 927664
+--------------------------------------------------------------------------------
+2000
+python3 ../../generate_tree.py 2000 123456 tmp_2000/run_phylofile
+0:00.03 0.03 12516
+../../evolve ../genomes/mycoplasma_genitalium_G37.peg hgtpool tmp_2000/run tmp_2000/run_phylofile ../../psubmatrix.txt 0.5 0.01 0.001 0.01 0.9 123456
+9:00.05 540.05 1847356
+--------------------------------------------------------------------------------
+5000
+python3 ../../generate_tree.py 5000 123456 tmp_5000/run_phylofile
+0:00.04 0.04 12852
+../../evolve ../genomes/mycoplasma_genitalium_G37.peg hgtpool tmp_5000/run tmp_5000/run_phylofile ../../psubmatrix.txt 0.5 0.01 0.001 0.01 0.9 123456
+23:24.71 1404.71 4461416
+--------------------------------------------------------------------------------
+10000
+python3 ../../generate_tree.py 10000 123456 tmp_10000/run_phylofile
+0:00.06 0.06 13388
+../../evolve ../genomes/mycoplasma_genitalium_G37.peg hgtpool tmp_10000/run tmp_10000/run_phylofile ../../psubmatrix.txt 0.5 0.01 0.001 0.01 0.9 123456
+50:48.92 3048.92 8933488
+--------------------------------------------------------------------------------
+20000
+python3 ../../generate_tree.py 20000 123456 tmp_20000/run_phylofile
+0:00.06 0.06 14732
+../../evolve ../genomes/mycoplasma_genitalium_G37.peg hgtpool tmp_20000/run tmp_20000/run_phylofile ../../psubmatrix.txt 0.5 0.01 0.001 0.01 0.9 123456
+1:51:02 6662.61 17859076
+--------------------------------------------------------------------------------
+50000
+python3 ../../generate_tree.py 50000 123456 tmp_50000/run_phylofile
+0:00.14 0.14 18884
+../../evolve ../genomes/mycoplasma_genitalium_G37.peg hgtpool tmp_50000/run tmp_50000/run_phylofile ../../psubmatrix.txt 0.5 0.01 0.001 0.01 0.9 123456
+5:47:23 20843.23 45180580
+================================================================================
+
