@@ -95,7 +95,7 @@ Sections with a yellow background are those internal tools that are in charge of
 The internal tools are:
 * `create_hgt_pool`: a C++ executable for creating an HGT pool from a set of PEG files.
 * `generate_tree.py`: a Python script for randomly generating a phylogenomic tree of the wanted population.
-* `tree2phyloxml.p`: a toll for converting a PANPROVA tre into a PhyloXML file and for genrating an image showing it.
+* `tree2phyloxml.p`: a tool for converting a PANPROVA tre into a PhyloXML file and for genrating an image showing it.
 * `evolve`: a C++ executable that implements the evolution procedure. 
 * `get_pan_distrs.py`: a Python script for retrieving pangenomic information from the generated population and for creating the corresponding output.
 * `pegs2gxx.py`: a Python script for converting the generated genomes into the GBK and GFF+FASTA formats.
