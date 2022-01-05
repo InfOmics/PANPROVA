@@ -125,6 +125,7 @@ At each step, a genome from the current population is chosen to be the parent of
 <br/>
 
 Then, according to a given probability, each vertically transmitted gene is selected to be altered or not. If yes, its loci are variated according to a given variation percentage. Possible variations are substitution (in accordance with the specified probability substitution matrix), insertion or deletion. Any modification is applied such that it does not produce or modify any star or stop codon of genes that overlap the gene that is currently modified. Overlapping genes may reside on both strands.
+Becuse valid genetic sequences must be provided, subsitution regards one nucleotided at time, while insertion and deletion regard 3 nucleotides a time, such that the length of the resultant sequence is still a multiple of 3.
 <br/>
 
 Subsequently, variated vertically transmitted genes are selected to be duplicated within the new genome according to a given probability. 
