@@ -11,7 +11,7 @@ Gene set variations, sequence variation and horizontal acquisition from a pool o
 
 ***PANPROVA*** evolves a single root genome into a population of synthetic genomes. The user can specify the phylogenomic relationships between the genomes in the population or leave the tool to create a random phylogenomic tree. 
 Genomes are evolved from their parent by mutating nucleotides, by duplicating vertically transmitted genes or by altering the set of genes that are present in them via gene removal or acquisition of new horizontal genes.
-A nucleotide substitution matrix is employed for nucleotide alterations. Mutation never create or remove exiting start and stop codons. 
+A nucleotide substitution matrix is employed for nucleotide alterations. Mutations never create or remove existing start and stop codons. 
 The horizontal acquisition of new genes is made by picking genetic sequences from a previously created pool or by randomly creating their sequence. 
 The user can specify the probability of a gene to be mutated, thus for each mutated gene the probability of a nucleotide to be mutated; the probability of duplicating a vertically transmitted gene and the percentage of the resultant gene set that as to be altered, by further specifying the probability of adding or removing a gene.
 
@@ -52,7 +52,7 @@ The parameters of the `PANPROVA.sh` script are:
 * `-oprefix output_prefix`: a string (path+prefix) that will be used as a prefix for producing output files.
 * `-igenome genome_file`: relative or absolute path to the file containing the root genome in PEG format. See next sections for details regarding the PEG format and for instructions on how to convert from GBFF/GFF+FASTA to the PEG format)
 * `[-hgtpool hgtpool_file]`: relative or absolute path to the file containing the HGT pool. See the next sections for details regarding the format of this file or how to create it from a set of PEG files. This parameter is optional, if not specified a blank HGT pool is used.
-* `[-psub psub_file]`: a relative or absolute path to the file containing the probability substitution matrix.  The file contains 4 row, one for each nucleotide A, C, G, T. Each row has 4 columns separated by space. Each column defines the probability of substituting the given nucleotide with another nucleotide by using the same ordering. Probabilities are expressed as numbers of 0…100. Thus the sum of each line must be 100. This parameter is optional, if not specified, the default matrix is stored in psubmatrix.txt. by setting every nucleotide to have an equal probability to be altered into any other nucleotide.
+* `[-psub psub_file]`: a relative or absolute path to the file containing the probability substitution matrix.  The file contains 4 rows, one for each nucleotide A, C, G, T. Each row has 4 columns separated by space. Each column defines the probability of substituting the given nucleotide with another nucleotide by using the same ordering. Probabilities are expressed as numbers of 0…100. Thus the sum of each line must be 100. This parameter is optional, if not specified, the default matrix is stored in psubmatrix.txt. by setting every nucleotide to have an equal probability to be altered into any other nucleotide.
 * `[-phylo phylo_file]`: a relative or absolute path to the file reporting the phylogenomics relationships between the genomes of the generated population. See the next sections for further details regarding the format of this file or how to obtain it from a PhyloXML file. This parameter is optional, if not specified random phylogenomics relationships are generated for a user-specified number of genomes.
 * `[-ngenomes n]`: specify the number of genomes to be created if -phylo is not used. This parameter is optional and is intended to be used only for randomly generated phylogenomics relationships.
 * `[-rseed seed]`: seed to be used in random number generations.
@@ -60,7 +60,7 @@ The parameters of the `PANPROVA.sh` script are:
 * `[-loc-var-prob p]`: the probability of variating (substitute,insert,delete) a nucleotide in a variated gene. This parameter is optional, the default value is 0.01. Valid values are between 0 and 1.
 * `[-gene-dup-prob p]`: the probability of duplicating a vertically transmitted gene. This parameter is optional, the default value is 0.001. Valid values are between 0 and 1.
 * `[-gset-var-perc p]`: percentage of variation of the gene set, it includes the creation of new genes and the removal of inherited ones. This parameter is optional, the default value is 0.01. Valid values are between 0 and 1.
-* `[-gene-add-prob p]`: with respect to the gene set variation, the probability of adding a horizontal gene.  This parameter is optional, the default value is 0.01. Valid values are between 0 and 1. the probability of removing a gene is set as p-1.
+* `[-gene-add-prob p]`: with respect to the gene set variation, the probability of adding a horizontal gene.  This parameter is optional, the default value is 0.01. Valid values are between 0 and 1. The probability of removing a gene is set as p-1.
 * `[--tran-stable table_number]`: translation table to be used for generating translations in GBFF files. The default value is 11.
 
 <br/>
@@ -72,7 +72,7 @@ The following output is produced by the tool
 * `[output_prefix].gene_parents`: the parenting relationships between all the genetic sequences contained in the produced population. 
 * `[output_prefix].genome_sequence`: the genomic sequences of the produced population. 
 * `[output_prefix].genes`: information regarding the genes of the produced genomes: their location within their genome and their nucleotide sequence.
-* `[output_prefix].gene_families`: a file that list the gene families that are present in the generated genomes. Each line is a family. Each gene is identified by a pari reporting the identifier of the genome and the identifier of the gene within the given genome.
+* `[output_prefix].gene_families`: a file that lists the gene families that are present in the generated genomes. Each line is a family. Each gene is identified by a pari reporting the identifier of the genome and the identifier of the gene within the given genome.
 * `[output_prefix].family_presence`: a table reporting for each gene family its presence within each generated genome. Each row is a gene family  and each column is a genome. Each cell reports the presence of the given family within the given genome.
 * `[output_prefix].pan_distribution`: the pangenomic distribution of genes in the generated population. If X genomes are present in the population, the distribution reports, for each number between 1 and X, the number of genes that are present in a given number of genomes. It is a two-columns text file where the first column is the number of genomes, while the second column is the number of genes that are present in exactly that specified number of genomes.
 * `[output_prefix]/genomes/*.GBFF`: the produced genomes in GBFF format.
@@ -95,14 +95,14 @@ Sections with a yellow background are those internal tools that are in charge of
 The internal tools are:
 * `create_hgt_pool`: a C++ executable for creating an HGT pool from a set of PEG files.
 * `generate_tree.py`: a Python script for randomly generating a phylogenomic tree of the wanted population.
-* `tree2phyloxml.p`: a tool for converting a PANPROVA tre into a PhyloXML file and for genrating an image showing it.
+* `tree2phyloxml.p`: a tool for converting a PANPROVA tre into a PhyloXML file and for generating an image showing it.
 * `evolve`: a C++ executable that implements the evolution procedure. 
 * `get_pan_distrs.py`: a Python script for retrieving pangenomic information from the generated population and for creating the corresponding output.
 * `pegs2gxx.py`: a Python script for converting the generated genomes into the GBK and GFF+FASTA formats.
 
 ----
 
-### Extractiong of HGT pool
+### Extraction of HGT pool
 
 The pool of HGT genes to be used during the evolution simulation is extracted from a set of input genomes (in PEG format) and by taking into account genes that are already present in the root genome (still in PEG format).
 The following picture illustrates the main steps of the extraction procedure.
@@ -114,7 +114,7 @@ The similarity among nucleotide genetic sequences is computed by taking into acc
 
 ### Evolution procedure
 
-The workflow of the evolution procedure, together with examples of intermediate data, is shown in the following figure. 
+The workflow of the evolution procedure, together with examples (in yellow boxes) of intermediate data, is shown in the following figure. 
 
 ![evolve](evolve.png)
 
@@ -125,7 +125,8 @@ At each step, a genome from the current population is chosen to be the parent of
 <br/>
 
 Then, according to a given probability, each vertically transmitted gene is selected to be altered or not. If yes, its loci are variated according to a given variation percentage. Possible variations are substitution (in accordance with the specified probability substitution matrix), insertion or deletion. Any modification is applied such that it does not produce or modify any star or stop codon of genes that overlap the gene that is currently modified. Overlapping genes may reside on both strands.
-Becuse valid genetic sequences must be provided, subsitution regards one nucleotided at time, while insertion and deletion regard 3 nucleotides a time, such that the length of the resultant sequence is still a multiple of 3.
+Because valid genetic sequences must be provided, substitution regards one nucleotide at time, while insertion and deletion regard 3 nucleotides a time, such that the length of the resultant sequence is still a multiple of 3.
+
 <br/>
 
 Subsequently, variated vertically transmitted genes are selected to be duplicated within the new genome according to a given probability. 
@@ -144,7 +145,7 @@ In case of gene acquisition, if the HGT pool is not empty, a genetic sequence is
 Subsequently, the resultant set of genes is randomly picked for transposition according to a given probability. 
 <br/>
 
-Lastly, the new genome is added to the population and the process is repeated until the desired number of genomes is produced. Every time a new genome is produced, its parenting relationships are recorded. In particular, the information regarding the genome from which it has been cloned is stored. In addition, for each gene in the new genome, the information regarding the parent gene is stored. for vertically transmitted genes, such information reports the identifiers of the gene present in the parent genome. For duplicated genes, such information reports the identification of the paralog gene from which the gene has been duplicated. for horizontally transmitted genes, such information is null. See example 5 of the figure.
+Lastly, the new genome is added to the population and the process is repeated until the desired number of genomes is produced. Every time a new genome is produced, its parenting relationships are recorded. In particular, the information regarding the genome from which it has been cloned is stored. In addition, for each gene in the new genome, the information regarding the parent gene is stored. for vertically transmitted genes, such information reports the identifiers of the gene present in the parent genome. For duplicated genes, such information reports the identification of the paralog gene from which the gene has been duplicated. For horizontally transmitted genes, such information is null. See example 5 of the Figure.
 
 ----
 
