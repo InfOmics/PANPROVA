@@ -201,17 +201,17 @@ Examples are locate in the dicrectory `examples` of this repository.
 
 Input genomes are located in the directory `exmaples/genomes`. They are in PEG format produced from GBFF files via the `gb2peg.py` script.
 
-### Example 1 : HGT pool extraction (2 genomes) and evolution from a Mycoplasma genitalium genome
+### Test 1 : HGT pool extraction (2 genomes) and evolution from a Mycoplasma genitalium genome
 The example retrieves the HGT pool from two genomes (bacillus_subtilis_168 and campylobacter_jejuni_NCTC11168).
 Then it runs the evolution by using the mycoplasma_genitalium_G37 genome as root genome.
 A population of 1000 genomes is generated with default evolutionary parameters.
 To run the example, enter in the example directory and run `bash run_example.sh`.
 
-### Example 2 : HGT pool extraction (7 genomes) and evolution from a Mycoplasma genitalium genome
+### Test 2 : HGT pool extraction (7 genomes) and evolution from a Mycoplasma genitalium genome
 This example reflects example 1 with the exception that 7 genomes are used to create the HGt pool. the genomes are listed in the file `hgt_list.txt`
 To run the example, enter in the example directory and run `bash run_example.sh`.
 
-### Example 3 : HGT pool and evolution of Escherichia coli
+### Test 3 : HGT pool and evolution of Escherichia coli
 An HGT pool from 7 Escherichia coli genomes of different strains is extracted.
 the HGT pool is  used to produce a population of 1000 genomes by using escherichia_coli_O157H7 as root genome.
 To run the example, enter in the example directory and run `bash run_example.sh`.
@@ -222,8 +222,8 @@ To run the example, enter in the example directory and run `bash run_example.sh`
 A previously produced output is present. It shows the obtained results by the images time.png and memory.png.
 The example was run on a Intel(R) Core(TM) i7-5960x with 64-Gb of RAM machine running a Ubuntu 64-bit 18.04 LTS system.
 
-![createhgttime](examples/example_4_createhgt/time.png)
-![createhgtmemory](examples/example_4_createhgt/memory.png)
+![createhgttime](examples/test_4_createhgt/time.png)
+![createhgtmemory](examples/test_4_createhgt/memory.png)
 
 
 ### Test 5 : producing populations of different sizes
@@ -234,8 +234,8 @@ A previously produced output is present.
 The example was run on a Intel(R) Core(TM) i7-5960x with 64-Gb of RAM machine running a Ubuntu 64-bit 18.04 LTS system.
 
 
-![evolvetime](examples/example_5_evolve/time.png)
-![evolvememory](examples/example_5_evolve/memory.png)
+![evolvetime](examples/test_5_evolve/time.png)
+![evolvememory](examples/test_5_evolve/memory.png)
 
 ----
 
