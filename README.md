@@ -116,7 +116,7 @@ The similarity among nucleotide genetic sequences is computed by taking into acc
 
 The workflow of the evolution procedure, together with examples (in yellow boxes) of intermediate data, is shown in the following figure. 
 
-<img src="https://github.com/InfOmics/PANPROVA/blob/main/evolve.png?raw=true" alt="evolve" width="400"/>
+<img src="https://github.com/InfOmics/PANPROVA/blob/main/evolve.png?raw=true" alt="evolve" width="500"/>
 
 The workflow refers to the case in which the generation of the random phylogenomic tree is integrated into the process.
 <br/>
