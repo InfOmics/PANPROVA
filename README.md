@@ -84,7 +84,6 @@ The following output is produced by the tool
 
 The following picture gives a detailed description of the PANPROVA workflow.
 
-<!-- ![Workflow](workflow.png) -->
 <img src="https://github.com/InfOmics/PANPROVA/blob/main/workflow.png?raw=true" alt="workflow" width="500"/>
 
 The workflow is composed of a set of internal tools, Python scripts and C++ executables, plus some external Python scripts that can be used for file format conversions.
@@ -108,7 +107,6 @@ The internal tools are:
 The pool of HGT genes to be used during the evolution simulation is extracted from a set of input genomes (in PEG format) and by taking into account genes that are already present in the root genome (still in PEG format).
 The following picture illustrates the main steps of the extraction procedure.
 
-<1-- ![createhgt](createhgt.png) -->
 <img src="https://github.com/InfOmics/PANPROVA/blob/main/createhgt.png?raw=true" alt="create hgt" width="200"/>
 
 From the given input genomes, a set of genes that are not similar to the genes present in the root genome is initially extracted. Then a nonredundant pool of genes is created by discarding genes that are similar to other genes in the initial set. 
@@ -118,7 +116,6 @@ The similarity among nucleotide genetic sequences is computed by taking into acc
 
 The workflow of the evolution procedure, together with examples (in yellow boxes) of intermediate data, is shown in the following figure. 
 
-<!-- ![evolve](evolve.png) -->
 <img src="https://github.com/InfOmics/PANPROVA/blob/main/evolve.png?raw=true" alt="evolve" width="400"/>
 
 The workflow refers to the case in which the generation of the random phylogenomic tree is integrated into the process.
