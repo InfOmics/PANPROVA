@@ -84,7 +84,7 @@ The following output is produced by the tool
 
 The following picture gives a detailed description of the PANPROVA workflow.
 
-<img src="https://github.com/InfOmics/PANPROVA/blob/main/workflow.png?raw=true" alt="workflow" width="400"/>
+<img src="https://github.com/InfOmics/PANPROVA/blob/main/workflow.svg?raw=true" alt="workflow" width="400"/>
 
 The workflow is composed of a set of internal tools, Python scripts and C++ executables, plus some external Python scripts that can be used for file format conversions.
 
@@ -107,7 +107,7 @@ The internal tools are:
 The pool of HGT genes to be used during the evolution simulation is extracted from a set of input genomes (in PEG format) and by taking into account genes that are already present in the root genome (still in PEG format).
 The following picture illustrates the main steps of the extraction procedure.
 
-<img src="https://github.com/InfOmics/PANPROVA/blob/main/createhgt.png?raw=true" alt="create hgt" width="200"/>
+<img src="https://github.com/InfOmics/PANPROVA/blob/main/createhgt.svg?raw=true" alt="create hgt" width="200"/>
 
 From the given input genomes, a set of genes that are not similar to the genes present in the root genome is initially extracted. Then a nonredundant pool of genes is created by discarding genes that are similar to other genes in the initial set. 
 The similarity among nucleotide genetic sequences is computed by taking into account the similarity between their k-mer content [1]. In particular, a Jaccard similarity between k-mer multisets of two genetic sequences is computed. Genes with a similarity greater than 0.3 with root genes are discarded. Successively, we set an arbitrary order of the surviving genes. Then, each gene is compared with genes that come after it in the ordering. If the similarity is greater than 0.5, then the latter gene is marked to be discarded. At the end of the scanning, all the genes that were marked are removed from the HGT pool.
@@ -116,7 +116,7 @@ The similarity among nucleotide genetic sequences is computed by taking into acc
 
 The workflow of the evolution procedure, together with examples (in yellow boxes) of intermediate data, is shown in the following figure. 
 
-<img src="https://github.com/InfOmics/PANPROVA/blob/main/evolve.png?raw=true" alt="evolve" width="600"/>
+<img src="https://github.com/InfOmics/PANPROVA/blob/main/evolve.svg?raw=true" alt="evolve" width="600"/>
 
 The workflow refers to the case in which the generation of the random phylogenomic tree is integrated into the process.
 <br/>
