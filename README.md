@@ -84,7 +84,8 @@ The following output is produced by the tool
 
 The following picture gives a detailed description of the PANPROVA workflow.
 
-![Workflow](workflow.png)
+<!-- ![Workflow](workflow.png) -->
+<img src="https://github.com/InfOmics/PANPROVA/blob/main/workflow.png?raw=true" alt="workflow" width="400"/>
 
 The workflow is composed of a set of internal tools, Python scripts and C++ executables, plus some external Python scripts that can be used for file format conversions.
 
