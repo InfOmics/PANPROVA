@@ -217,6 +217,9 @@ The example retrieves the HGT pool from two genomes (bacillus_subtilis_168 and c
 Then it runs the evolution by using the mycoplasma_genitalium_G37 genome as root genome.
 A population of 1000 genomes is generated with default evolutionary parameters.
 To run the example, enter in the example directory and run `bash run_example.sh`.
+<br/>
+Because the extraction of the HGT pool for this example may require a long time, the folder contains an already extracted pool. 
+It is the result of line 9 of `run_exmaple.sh`, so the user can comment the line and uses the previously extracted pool.
 
 ### Test 2 : HGT pool extraction (7 genomes) and evolution from a Mycoplasma genitalium genome
 This example reflects example 1 with the exception that 7 genomes are used to create the HGt pool. the genomes are listed in the file `hgt_list.txt`
