@@ -197,7 +197,7 @@ Start and end positions are integer numbers and always refer to position 0 of th
 * `gbk2peg.py ifile.gbk ofile.peg`: a Python script for converting a GBFF file into a PEG file.
 * `phyloxml2tree.py ifile.phyloxml ofile.genome_parents`: a Python script for extracting the parenthood information from a PhyloXML file into the internal format of PANPROVA (PEG). The phylogenomic distance, as well as any other information that does not regarding parenthood, is not taken into account. Only rooted trees can be used.
 * `tree2phyloxml.py ifile.genome_parents ofile.phyloxml`: a Python script to convert internal tree format to PhyloXML
-* `fragment.py ifile.gbff ofile.fasta`: simulate a fragmentation of a given genome provided as a genebank file. The result is a FASTa file containing the fragments. For each fragment, the file also reports the start and end coordinated within the original genome. Information regarding input genes and their correspondence with fragments are printed on screen. 
+* `fragment.py ifile.gbff ofile.fasta`: simulate a fragmentation of a given genome provided as a genebank file. The result is a FASTa file containing the fragments. For each fragment, the file also reports the start and end coordinated within the original genome. Information regarding input genes and their correspondence with fragments are printed on screen. However, final users may be interested in other types of fragmentation. For example, fragmentation by sequencing simulation can be preferred and more realistic. We recall that there exist specialized methods for this purpose, such as in [5].
 
 ----
 
@@ -263,4 +263,5 @@ To appear
 [2] Bonnici, V., Maresi, E., & Giugno, R. (2021). Challenges in gene-oriented approaches for pangenome content discovery. Briefings in Bioinformatics, 22(3), bbaa198.
 [3] Gabrielaite, M., & Marvig, R. L. (2020). GenAPI: a tool for gene absence-presence identification in fragmented bacterial genome sequences. BMC bioinformatics, 21(1), 1-8.
 [4] Barrick, J. E., Yu, D. S., Yoon, S. H., Jeong, H., Oh, T. K., Schneider, D., ... & Kim, J. F. (2009). Genome evolution and adaptation in a long-term experiment with Escherichia coli. Nature, 461(7268), 1243-1247.
+[5] Stephens, Zachary D., Matthew E. Hudson, Liudmila S. Mainzer, Morgan Taschuk, Matthew R. Weber, and Ravishankar K. Iyer. "Simulating next-generation sequencing datasets from empirical mutation and sequencing models." PloS one 11, no. 11 (2016): e0167047.
 
