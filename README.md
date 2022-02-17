@@ -95,7 +95,7 @@ Sections with a yellow background are those internal tools that are in charge of
 <br/>
 
 The internal tools are:
-* `create_hgt_pool`: a C++ executable for creating an HGT pool from a set of PEG files.
+* `create_hgt_pool`: a C++ executable for creating an HGT pool from a set of PEG files. It also takes are input the root genome in roder to discard genes that a re similar to the genetic sequences within the root genome.
 * `generate_tree.py`: a Python script for randomly generating a phylogenomic tree of the wanted population.
 * `tree2phyloxml.p`: a tool for converting a PANPROVA tree into a PhyloXML file and for generating an image showing it.
 * `evolve`: a C++ executable that implements the evolution procedure. 
@@ -106,7 +106,7 @@ The internal tools are:
 
 ### Extraction of HGT pool
 
-The pool of HGT genes to be used during the evolution simulation is extracted from a set of input genomes (in PEG format) and by taking into account genes that are already present in the root genome (still in PEG format).
+The pool of HGT genes to be used during the evolution simulation is extracted from a set of input genomes (in PEG format) and by taking into account genes that are already present in the root genome (still in PEG format) for excluding genes similar to them from the HGT pool.
 The following picture illustrates the main steps of the extraction procedure.
 
 <p align="center">
