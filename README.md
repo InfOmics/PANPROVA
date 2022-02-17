@@ -203,6 +203,8 @@ Start and end positions are integer numbers and always refer to position 0 of th
 
 ## Examples
 
+The provided tests were aimed at simulating real-life situations. In fact, the mycoplasma pangenome (tests 1 and 2) is often involved in computational experiments regarding bacteria because it is one of the smallest genomes, and several pan genomic tools show experiments on this genus [2]. The same applies to the third test in which an Escherichia coli genome is used as root genome [3]. Several computational experiments are at the state of the art for simulating the evolution of Escherichia coli [4], and pangenomic tools performance are also shown on these populations. However, their experiments do not take into account pangneomic properties of the generated population, which is the main purpose of PANPROVA. Of course, they apply more complex sequence alteration models, in terms of variation of the nucleotide sequence, but in our opinion, they can not be directly compared with PANPROVA because of the different aims.
+
 Examples are locate in the dicrectory `examples` of this repository.
 
 Input genomes are located in the directory `exmaples/genomes`. They are in PEG format produced from GBFF files via the `gb2peg.py` script.
@@ -258,3 +260,7 @@ To appear
 ## References
 
 [1] Bonnici, V., Giugno, R., & Manca, V. (2018). PanDelos: A dictionary-based method for pan-genome content discovery. BMC bioinformatics, 19(15), 47-59.
+[2] Bonnici, V., Maresi, E., & Giugno, R. (2021). Challenges in gene-oriented approaches for pangenome content discovery. Briefings in Bioinformatics, 22(3), bbaa198.
+[3] Gabrielaite, M., & Marvig, R. L. (2020). GenAPI: a tool for gene absence-presence identification in fragmented bacterial genome sequences. BMC bioinformatics, 21(1), 1-8.
+[4] Barrick, J. E., Yu, D. S., Yoon, S. H., Jeong, H., Oh, T. K., Schneider, D., ... & Kim, J. F. (2009). Genome evolution and adaptation in a long-term experiment with Escherichia coli. Nature, 461(7268), 1243-1247.
+
