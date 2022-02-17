@@ -130,9 +130,12 @@ The workflow refers to the case in which the generation of the random phylogenom
 At each step, a genome from the current population is chosen to be the parent of the next genome to be created. Thus, the parent genome is cloned and an initial version of the child genome is produced (see example 1 of the figure). 
 <br/>
 
-Then, according to a given probability, each vertically transmitted gene is selected to be altered or not. If yes, its loci are variated according to a given variation percentage. Possible variations are substitution (in accordance with the specified probability substitution matrix), insertion or deletion. Any modification is applied such that it does not produce or modify any star or stop codon of genes that overlap the gene that is currently modified. Overlapping genes may reside on both strands.
+Then, according to a given probability, each vertically transmitted gene is selected to be altered or not. If yes, its loci are variated according to a given variation percentage. Possible variations are substitution, insertion or deletion. 
+The tool gives the possibility to specify user-defined substitution probabilities for nucleotides by providing a file containing them. By default, every nucleotide can be substituted by any other nucleotide with equal probability.
+Any modification is applied such that it does not produce or modify any star or stop codon of genes that overlap the gene that is currently modified. Overlapping genes may reside on both strands.
 Because valid genetic sequences must be provided, substitution regards one nucleotide at time, while insertion and deletion regard 3 nucleotides a time, such that the length of the resultant sequence is still a multiple of 3.
-
+<br/>
+Ts/Tv ratio and synonym/non-synonym mutation ratio are intended to be the effects of the alterations that are performed on genetic sequences, thus they can not be specified as input parameters. We are aware that more complex models of sequencing alteration are available at the state of the art. However, the main aim of  ***PANPROVA*** is to simulate pangenomic effects, mainly due to the acquisition and deletion of genes. An extension of the software by us or the research community may include more accurate models. 
 <br/>
 
 Subsequently, variated vertically transmitted genes are selected to be duplicated within the new genome according to a given probability. 
