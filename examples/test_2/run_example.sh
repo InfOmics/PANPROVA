@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "================================================================================"
-echo "PANPROVA example 1"
+echo "PANPROVA example 2"
 echo "================================================================================"
 
 echo "HGT genome list is in hgt_list.txt"
