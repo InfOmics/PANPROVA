@@ -11,7 +11,7 @@ Gene set variations, sequence variation and horizontal acquisition from a pool o
 
 ***PANPROVA*** evolves a single root genome into a population of synthetic genomes. The user can specify the phylogenomic relationships between the genomes in the population or leave the tool to create a random phylogenomic tree. 
 Genomes are evolved from their parent by mutating nucleotides, by duplicating vertically transmitted genes or by altering the set of genes that are present in them via gene removal or acquisition of new horizontal genes.
-A nucleotide substitution matrix is employed for nucleotide alterations. Mutations never create or remove existing start and stop codons. 
+A nucleotide substitution matrix is employed for nucleotide alterations. Mutations never create or remove the existing start and stop codons. 
 The horizontal acquisition of new genes is made by picking genetic sequences from a previously created pool or by randomly creating their sequence. 
 The user can specify the probability of a gene to be mutated, thus for each mutated gene the probability of a nucleotide to be mutated; the probability of duplicating a vertically transmitted gene and the percentage of the resultant gene set that as to be altered, by further specifying the probability of adding or removing a gene.
 
@@ -72,9 +72,9 @@ The following output is produced by the tool
 * `[output_prefix].gene_parents`: the parenting relationships between all the genetic sequences contained in the produced population. 
 * `[output_prefix].genome_sequence`: the genomic sequences of the produced population. 
 * `[output_prefix].genes`: information regarding the genes of the produced genomes: their location within their genome and their nucleotide sequence.
-* `[output_prefix].gene_families`: a file that lists the gene families that are present in the generated genomes. Each line is a family. Each gene is identified by a pari reporting the identifier of the genome and the identifier of the gene within the given genome.
-* `[output_prefix].family_presence`: a table reporting for each gene family its presence within each generated genome. Each row is a gene family  and each column is a genome. Each cell reports the presence of the given family within the given genome.
-* `[output_prefix].pan_distribution`: the pangenomic distribution of genes in the generated population. If X genomes are present in the population, the distribution reports, for each number between 1 and X, the number of genes that are present in a given number of genomes. It is a two-columns text file where the first column is the number of genomes, while the second column is the number of genes that are present in exactly that specified number of genomes.
+* `[output_prefix].gene_families`: a file that lists the gene families that are present in the generated genomes. Each line is a family. Each gene is identified by a pair reporting the identifier of the genome and the identifier of the gene within the given genome.
+* `[output_prefix].family_presence`: a table reporting for each gene family its presence within each generated genome. Each row is a gene family and each column is a genome. Each cell reports the presence of the given family within the given genome.
+* `[output_prefix].pan_distribution`: the pangenomic distribution of genes in the generated population. If X genomes are present in the population, the distribution reports, for each number between 1 and X, the number of genes that are present in a given number of genomes. It is a two-column text file where the first column is the number of genomes, while the second column is the number of genes that are present in exactly that specified number of genomes.
 * `[output_prefix]/genomes/*.GBFF`: the produced genomes in GBFF format.
 * `[output_prefix]/genomes/*.GFF  [output_prefix]/genomes/*.FASTA`: the produced genomes in GFF+FASTA format.
 
@@ -97,7 +97,7 @@ Sections with a yellow background are those internal tools that are in charge of
 The internal tools are:
 * `create_hgt_pool`: a C++ executable for creating an HGT pool from a set of PEG files.
 * `generate_tree.py`: a Python script for randomly generating a phylogenomic tree of the wanted population.
-* `tree2phyloxml.p`: a tool for converting a PANPROVA tre into a PhyloXML file and for generating an image showing it.
+* `tree2phyloxml.p`: a tool for converting a PANPROVA tree into a PhyloXML file and for generating an image showing it.
 * `evolve`: a C++ executable that implements the evolution procedure. 
 * `get_pan_distrs.py`: a Python script for retrieving pangenomic information from the generated population and for creating the corresponding output.
 * `pegs2gxx.py`: a Python script for converting the generated genomes into the GBK and GFF+FASTA formats.
@@ -133,7 +133,7 @@ At each step, a genome from the current population is chosen to be the parent of
 Then, according to a given probability, each vertically transmitted gene is selected to be altered or not. If yes, its loci are variated according to a given variation percentage. Possible variations are substitution, insertion or deletion. 
 The tool gives the possibility to specify user-defined substitution probabilities for nucleotides by providing a file containing them. By default, every nucleotide can be substituted by any other nucleotide with equal probability.
 Any modification is applied such that it does not produce or modify any star or stop codon of genes that overlap the gene that is currently modified. Overlapping genes may reside on both strands.
-Because valid genetic sequences must be provided, substitution regards one nucleotide at time, while insertion and deletion regard 3 nucleotides a time, such that the length of the resultant sequence is still a multiple of 3.
+Because valid genetic sequences must be provided, substitution regards one nucleotide at a time, while insertion and deletion regard 3 nucleotides at a time, such that the length of the resulting sequence is still a multiple of 3.
 <br/>
 Ts/Tv ratio and synonym/non-synonym mutation ratio are intended to be the effects of the alterations that are performed on genetic sequences, thus they can not be specified as input parameters. We are aware that more complex models of sequencing alteration are available at the state of the art. However, the main aim of  ***PANPROVA*** is to simulate pangenomic effects, mainly due to the acquisition and deletion of genes. An extension of the software by us or the research community may include more accurate models. 
 <br/>
@@ -142,7 +142,7 @@ Subsequently, variated vertically transmitted genes are selected to be duplicate
 <br/>
 
 Duplication, insertion of HGT genes and transposition of genes is made such that a random locus of the genome is chosen. the locus must not be covered by any other gene. Thus, the genetic sequence of the gene, together with start and stop codons, is inserted at the selected locus. See examples 2 and 4 of the figure.
-The resultant gene set is modified by a given percentage. If the set is composed of n genes and 2% of the set has to be variated, then (n/100)x2 variation operations are performed. such operation can be a horizontal gene acquisition of a gene removal. If the probability that an operation is acquisition is p, then the probability that the operation is a removal is 1-p.
+The resultant gene set is modified by a given percentage. If the set is composed of n genes and 2% of the set has to be variated, then (n/100)x2 variation operations are performed. such operation can be a horizontal gene acquisition of a gene removal. If the probability that an operation is an acquisition is p, then the probability that the operation is a removal is 1-p.
 <br/>
 
 In the case of gene removal, a gene is randomly chosen to be removed. All the nucleotides that belong to the selected gene are removed from the genome if they do not overlap other genes. See example 3 of the figure.
@@ -200,7 +200,7 @@ Start and end positions are integer numbers and always refer to position 0 of th
 * `gbk2peg.py ifile.gbk ofile.peg`: a Python script for converting a GBFF file into a PEG file.
 * `phyloxml2tree.py ifile.phyloxml ofile.genome_parents`: a Python script for extracting the parenthood information from a PhyloXML file into the internal format of PANPROVA (PEG). The phylogenomic distance, as well as any other information that does not regarding parenthood, is not taken into account. Only rooted trees can be used.
 * `tree2phyloxml.py ifile.genome_parents ofile.phyloxml`: a Python script to convert internal tree format to PhyloXML
-* `fragment.py ifile.gbff ofile.fasta`: simulate a fragmentation of a given genome provided as a genebank file. The result is a FASTa file containing the fragments. For each fragment, the file also reports the start and end coordinated within the original genome. Information regarding input genes and their correspondence with fragments are printed on screen. However, final users may be interested in other types of fragmentation. For example, fragmentation by sequencing simulation can be preferred and more realistic. We recall that there exist specialized methods for this purpose, such as in [5].
+* `fragment.py ifile.gbff ofile.fasta`: simulate a fragmentation of a given genome provided as a genebank file. The result is a FASTa file containing the fragments. For each fragment, the file also reports the start and end coordinated within the original genome. Information regarding input genes and their correspondence with fragments are printed on the screen. However, final users may be interested in other types of fragmentation. For example, fragmentation by sequencing simulation can be preferred and more realistic. We recall that there exist specialized methods for this purpose, such as in [5].
 
 ----
 
@@ -208,7 +208,7 @@ Start and end positions are integer numbers and always refer to position 0 of th
 
 The provided tests were aimed at simulating real-life situations. In fact, the mycoplasma pangenome (tests 1 and 2) is often involved in computational experiments regarding bacteria because it is one of the smallest genomes, and several pan genomic tools show experiments on this genus [2]. The same applies to the third test in which an Escherichia coli genome is used as root genome [3]. Several computational experiments are at the state of the art for simulating the evolution of Escherichia coli [4], and pangenomic tools performance are also shown on these populations. However, their experiments do not take into account pangneomic properties of the generated population, which is the main purpose of PANPROVA. Of course, they apply more complex sequence alteration models, in terms of variation of the nucleotide sequence, but in our opinion, they can not be directly compared with PANPROVA because of the different aims.
 
-Examples are locate in the dicrectory `examples` of this repository.
+Examples are located in the directory `examples` of this repository.
 
 Input genomes are located in the directory `exmaples/genomes`. They are in PEG format produced from GBFF files via the `gb2peg.py` script.
 
@@ -224,11 +224,11 @@ To run the example, enter in the example directory and run `bash run_example.sh`
 
 ### Test 3 : HGT pool and evolution of Escherichia coli
 An HGT pool from 7 Escherichia coli genomes of different strains is extracted.
-the HGT pool is  used to produce a population of 1000 genomes by using escherichia_coli_O157H7 as root genome.
+the HGT pool is used to produce a population of 1000 genomes by using escherichia_coli_O157H7 as root genome.
 To run the example, enter in the example directory and run `bash run_example.sh`.
 
 ### Test 4 : creating the HGT pool by increasing the number of input genes
-This exmaple investigates the running time of the HGT creation procedure on varying the number in input genomes and thus the numbr of input genes that must be compared in roder to obtain a unredundant collection fo genetic sequences.
+This example investigates the running time of the HGT creation procedure on varying the number of input genomes and thus the number of input genes that must be compared in order to obtain an unredundant collection of genetic sequences.
 To run the example, enter in the example directory and run `bash run_example.sh`.
 A previously produced output is present. It shows the obtained results by the images time.png and memory.png.
 The example was run on a Intel(R) Core(TM) i7-5960x with 64-Gb of RAM machine running a Ubuntu 64-bit 18.04 LTS system.
@@ -238,8 +238,8 @@ The example was run on a Intel(R) Core(TM) i7-5960x with 64-Gb of RAM machine ru
 
 
 ### Test 5 : producing populations of different sizes
-This examples investigates the running time of the evolvution precedure on genrating populaiton with different number of genomes.
-It reflects the configuration fo example 1 except for the number of generated genomes.
+This example investigates the running time of the evolution procedure on generating populations with a different number of genomes.
+It reflects the configuration of Example 1 except for the number of generated genomes.
 To run the example, enter in the example directory and run `bash run_example.sh`.
 A previously produced output is present. 
 The example was run on a Intel(R) Core(TM) i7-5960x with 64-Gb of RAM machine running a Ubuntu 64-bit 18.04 LTS system.
@@ -253,7 +253,7 @@ The example was run on a Intel(R) Core(TM) i7-5960x with 64-Gb of RAM machine ru
 
 ## License
 PANPROVA is distributed under the MIT license. This means that it is free for both academic and commercial use. Note however that some third party components in PANPROVA require that you reference certain works in scientific publications.
-You are free to link or use PANPROVA inside source code of your own program. If do so, please reference (cite) PANPROVA and this website. We appreciate bug fixes and would be happy to collaborate for improvements. 
+You are free to link or use PANPROVA inside the source code of your own program. If do so, please reference (cite) PANPROVA and this website. We appreciate bug fixes and would be happy to collaborate for improvements. 
 [License](https://raw.githubusercontent.com/InfOmics/PANPROVA/master/LICENSE)
 
 ## Citation
@@ -267,4 +267,3 @@ To appear
 [3] Gabrielaite, M., & Marvig, R. L. (2020). GenAPI: a tool for gene absence-presence identification in fragmented bacterial genome sequences. BMC bioinformatics, 21(1), 1-8.
 [4] Barrick, J. E., Yu, D. S., Yoon, S. H., Jeong, H., Oh, T. K., Schneider, D., ... & Kim, J. F. (2009). Genome evolution and adaptation in a long-term experiment with Escherichia coli. Nature, 461(7268), 1243-1247.
 [5] Stephens, Zachary D., Matthew E. Hudson, Liudmila S. Mainzer, Morgan Taschuk, Matthew R. Weber, and Ravishankar K. Iyer. "Simulating next-generation sequencing datasets from empirical mutation and sequencing models." PloS one 11, no. 11 (2016): e0167047.
-
