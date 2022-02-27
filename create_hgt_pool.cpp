@@ -52,10 +52,12 @@ public:
 
 class Genome{
 public:
+    std::string name;
     std::string sequence;
     std::vector<Locus> loci;
 
     Genome(){
+        name = "";
         sequence = "";
     }
 
@@ -234,6 +236,7 @@ int main(int argc, char** argv){
             std::cout<<hgt->sequence.size()<<" "<<hgt->loci.size()
                      <<" "<<*(hgt->loci.begin())<<" \n";
             std::cout<<hgt->sequence.substr(0,100)<<"\n";
+            hgt->name = line;
             hgt_genomes.push_back(hgt);
         }else{
             std::cout<<"genome not loaded.\n";
@@ -248,10 +251,24 @@ int main(int argc, char** argv){
     std::vector<std::string> *root_genes = root_genome->get_gene_sequences();
     std::cout<<"retrieved "<<root_genes->size()<<" root genes\n";
     std::cout<<"--------------------\n";
+
+    std::vector<std::string> genome_names;
+    std::vector<int> genes_to_genome;
+    std::vector<Locus> loci;
+
     std::vector<std::string> *hgt_genes = new std::vector<std::string>();
+    int gid = 0;
     for(auto &genome : hgt_genomes){
+        genome_names.push_back(genome->name);
         std::vector<std::string> *genes = genome->get_gene_sequences();
         hgt_genes->insert(hgt_genes->end(), genes->begin(), genes->end());
+        for(int i=0; i<hgt_genes->size(); i++){
+            genes_to_genome.push_back(gid);
+        }
+        for(auto & locus : genome->loci){
+            loci.push_back(locus);
+        }
+        gid++;
     }
     std::cout<<"retrieved an initial pool of "<<hgt_genes->size()<<" HGT genes\n";
 
@@ -262,34 +279,9 @@ int main(int argc, char** argv){
 
     std::cout<<"----------------------------------------\n";
 
-    std::cout<<"Discarding HGT genes by their similairity with root genes ...\n";
+    std::cout<<"Discarding HGT genes by their similarity with root genes ...\n";
     std::cout<<"--------------------\n";
 
-    /*
-    std::cout<<"retrieving root genes k-mers ...\n";
-    std::vector< std::map<std::string, int> * > root_gene_mults;
-    for(auto &s : *root_genes){
-        std::map<std::string, int> * mults = get_kmer_multiplicities(s,jaccard_k);
-        root_gene_mults.push_back(mults);
-    }
-    
-    std::cout<<"--------------------\n";
-
-    std::vector<int> todelete;
-    std::cout<<"comparing hgt genes to root genes ...\n";
-    for(int i=0; i<hgt_genes->size(); i++){
-        std::cout<<i<<"/"<<hgt_genes->size()<<"\n";
-        std::map<std::string, int> * mults = get_kmer_multiplicities((*hgt_genes)[i],jaccard_k);
-        for(int j=0; j<root_genes->size(); j++){
-            double jac_sim = generalized_jaccard( *mults, *( root_gene_mults[j] ) );
-            if(jac_sim >= jaccard_root_sim){
-                todelete.push_back(i);
-                break;
-            }
-        }
-    }
-    */
-    
 
     std::cout<<"indexing root genes ...\n";
     
@@ -505,10 +497,13 @@ int main(int argc, char** argv){
 
     std::cout<<"----------------------------------------\n";
 
-    std::cout<<"Writing HGT genes to "<<argv[2]<<"\n";
+    std::cout<<"Writing HGT genes to "<<argv[2]<<" and "<<argv[2]<<".fa\n";
 
     std::ofstream myfile;
     myfile.open (argv[2]);
+
+    std::ofstream myfile2;
+    myfile2.open (std::string(argv[2])+".fa");
 
 
     //std::vector<std::string> towrite;
@@ -518,191 +513,20 @@ int main(int argc, char** argv){
         if(todelete.find(h1) == todelete.end()){
             //towrite.push_back(hgt_genes[h1]);
             myfile << (*hgt_genes)[h1]<<"\n";
+
+            myfile2 <<">"<< genome_names[genes_to_genome[h1]]<<":"<< loci[h1].start<<":"<<loci[1].end<<":"<<loci[h1].strand  <<"\n";
+            myfile2 << (*hgt_genes)[h1]<<"\n";
+
             count++;
         }
     }
     myfile.flush();
     myfile.close();
+    myfile2.flush();
+    myfile2.close();
     std::cout<<count<<" genes written on file\n";
     std::cout<<"----------------------------------------\n";
     std::cout<<"done\n";
-
-    //std::ofstream output_file(argv[2]);
-    //std::ostream_iterator<std::string> output_iterator(output_file, "\n");
-    //std::copy(towrite.begin(), towrite.end(), output_iterator);
-
-    //std::ofstream myfile;
-    //myfile.open (argv[2]);
-    //myfile << "Writing this to a file.\n";
-    //myfile.flush();
-    //myfile.close();
-
-
-
-    /*
-    std::cout<<"calculating jaccard similarities ...\n";
-    std::map<int, double>* nums_map = new std::map<int, double>[hgt_genes->size()];
-    std::map<int, double>* dens_map = new std::map<int, double>[hgt_genes->size()];
-
-    int hgt_sel_length = hgt_selection.size();
-    int * hgt_sel = new int[hgt_selection.size()];
-    int h1 = 0, h2, h1i, h2i;
-    for(auto &h : hgt_selection){
-        hgt_sel[h1] = h;
-        h1++;
-    }
-    std::pair<int,int> hh(0,0);
-    double hs, hsmax;
-
-    for(const auto &p : hgt_kmer_mults){
-        for(h1i=0; h1i<hgt_sel_length; h1i++){
-            h1 = hgt_sel[h1i];
-            if( (p.second[h1]>0)) {
-                std::cout<<p.first<<" "<<h1i<<" "<<h1<<"\n";
-                
-                std::map<int, double> &h1_nums = nums_map[h1];
-                std::map<int, double> &h1_dens = dens_map[h1];
-
-
-                for(h2i=h1i+1; h2i<hgt_sel_length; h2i++){
-                    h2 = hgt_sel[h2i];
-
-                    if(hgt_kmer_sums[h1] >= hgt_kmer_sums[h2]){
-                        hs = hgt_kmer_sums[h2] / ((hgt_kmer_sums[h1]-hgt_kmer_sums[h2]) + hgt_kmer_sums[h2]);
-                    }
-                    else{
-                        hs = hgt_kmer_sums[h1] / ((hgt_kmer_sums[h2]-hgt_kmer_sums[h1]) + hgt_kmer_sums[h1]);
-                    }
-
-                    if(hs >= jaccard_hgt_sim){
-              
-                        hh.first = h1;
-                        hh.second = h2;
-                        if(p.second[h1] > p.second[h2]){
-                            h1_nums[h2] += h1_nums[h2] + p.second[h2];
-                            h1_dens[h2] += h1_dens[h2] + p.second[h1];
-                        }
-                        else{
-                            h1_nums[h2] += h1_nums[h2] + p.second[h1];
-                            h1_dens[h2] += h1_dens[h2] + p.second[h2];
-                        }
-                    }
-                }
-            }
-        }
-    }
-    */
-
-
-
-
-
-
-    /*
-    std::cout<<"calculating jaccard similarities ...\n";
-    std::map<std::pair<int,int>, double> nums_map;
-    std::map<std::pair<int,int>, double> dens_map;
-
-    int hgt_sel_length = hgt_selection.size();
-    int * hgt_sel = new int[hgt_selection.size()];
-    int h1 = 0, h2, h1i, h2i;
-    for(auto &h : hgt_selection){
-        hgt_sel[h1] = h;
-        h1++;
-    }
-    std::pair<int,int> hh(0,0);
-    double hs, hsmax;
-
-    for(const auto &p : hgt_kmer_mults){
-        for(h1i=0; h1i<hgt_sel_length; h1i++){
-            h1 = hgt_sel[h1i];
-            if( (p.second[h1]>0)) {
-                std::cout<<p.first<<" "<<h1i<<" "<<h1<<"\n";
-                for(h2i=h1i+1; h2i<hgt_sel_length; h2i++){
-                    h2 = hgt_sel[h2i];
-
-                    if(hgt_kmer_sums[h1] >= hgt_kmer_sums[h2]){
-                        hs = hgt_kmer_sums[h2] / ((hgt_kmer_sums[h1]-hgt_kmer_sums[h2]) + hgt_kmer_sums[h2]);
-                    }
-                    else{
-                        hs = hgt_kmer_sums[h1] / ((hgt_kmer_sums[h2]-hgt_kmer_sums[h1]) + hgt_kmer_sums[h1]);
-                    }
-
-                    if(hs >= jaccard_hgt_sim){
-              
-                        hh.first = h1;
-                        hh.second = h2;
-                        if(p.second[h1] > p.second[h2]){
-                            nums_map[hh] = nums_map[hh] + p.second[h2];
-                            dens_map[hh] = dens_map[hh] + p.second[h1];
-                        }
-                        else{
-                            nums_map[hh] = nums_map[hh] + p.second[h1];
-                            dens_map[hh] = dens_map[hh] + p.second[h2];
-                        }
-                    }
-                }
-            }
-        }
-    }
-    */
-
-    /*
-    for(const auto &p : hgt_kmer_mults){
-        std::cout<<p.first<<"\n";
-        for(auto h1 : hgt_selection){
-            if( (p.second[h1]>0)) {
-                //std::cout<<p.first<<" "<<h1<<"\n";
-                for(auto h2 : hgt_selection){
-                    if(h1<h2){
-                        //if( (p.second[h1]>0) && (p.second[h2]>0) ){
-                            
-                            std::pair<int,int> hh(h1,h2);
-
-                            if(p.second[h1] > p.second[h2]){
-                                nums_map[hh] = nums_map[hh] + p.second[h2];
-                                dens_map[hh] = dens_map[hh] + p.second[h1];
-                            }
-                            else{
-                                nums_map[hh] = nums_map[hh] + p.second[h1];
-                                dens_map[hh] = dens_map[hh] + p.second[h2];
-                            }
-                            
-                        //}
-                    }
-                }
-
-            }
-        }
-    }
-    */
-
-
-   /*
-    std::cout<<"discarding similar genes ...\n";
-    std::set<int> todelete;
-
-    for(auto h1 : hgt_selection){
-        for(auto h2 : hgt_selection){
-            if(h1<h2){
-                if(todelete.find(h1) == todelete.end()){
-                    if(todelete.find(h2) == todelete.end()){
-                        std::pair<int,int> hh(h1,h2);
-                        jvalue = nums_map[hh] / dens_map[hh];
-                        //std::cout<<h1<<" "<<h2<<" "<<jvalue<<"\n";
-                        if(jvalue >= jaccard_hgt_sim){
-                            todelete.insert(h2);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    std::cout<<todelete.size()<< " HGT genes discarded \n";
-    */
-
-    
 
 
     std::cout<<"----------------------------------------\n";
