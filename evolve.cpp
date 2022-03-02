@@ -307,6 +307,9 @@ bool to_revert(std::string &s, int p){
     else if(s[p]=='T' && s[p+1]=='T' && s[p+2]=='G'){
         return true;
     }
+    else{
+        return false;
+    }
 };
 
 static const char int2nuc[] = {'A','C','G','T'};
