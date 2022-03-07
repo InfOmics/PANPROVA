@@ -253,7 +253,7 @@ The example was run on a Intel(R) Core(TM) i7-5960x with 64-Gb of RAM machine ru
 
 
 ### Test 6 : reproducing the phylogentic tree
-This example shows a testing of ***PANPROVA*** run with a user-provided phylogeny and that further compares this input phylogeny with  both the output phylogeny reported by ***PANPROVA**, and  the phylogeny reconstructed based on the simulated genomes produced by ***PANPROVA***.
+This example shows a testing of ***PANPROVA*** run with a user-provided phylogeny and that further compares this input phylogeny with  both the output phylogeny reported by ***PANPROVA***, and  the phylogeny reconstructed based on the simulated genomes produced by ***PANPROVA***.
 In order to demonstrate this, we ran a modified version of example 1 in which we provided a phylogeny with 20 genomes as input (example.tree). ***PANPROVA*** was run on this phylogeny and the resulting 20 genomes were produced. Then, we computed genomic similarity between the generated genomes by means of the CVTree software (https://github.com/ghzuo/CVTree), that implements a well-established methodology for computing bacterial similarity (similarities.pdf). Then, we reconstructed the phylogenetic tree (tree.pdf). This experiment shows that the reconstructed tree follows the original phylogenetic relationship among the genomes
 
 
