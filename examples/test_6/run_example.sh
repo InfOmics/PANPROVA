@@ -23,12 +23,12 @@ date
 
 
 
-#git clone https://github.com/ghzuo/CVTree.git
+git clone https://github.com/ghzuo/CVTree.git
 
-#cd CVTree
-#cmake ./
-#make
-#cd ..
+cd CVTree
+cmake ./
+make
+cd ..
 
 mkdir gg
 rm gglist
