@@ -267,7 +267,8 @@ You are free to link or use PANPROVA inside the source code of your own program.
 
 ## Citation
 
-To appear
+Vincenzo Bonnici and Rosalba Giugno. "PANPROVA: PANgenomic PROkaryotic eVolution of full Assemblies."
+To appear in Bioinformatics (2022), Oxford Accademic.
 
 ## References
 
