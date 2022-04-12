@@ -257,6 +257,11 @@ This example shows a testing of ***PANPROVA*** run with a user-provided phylogen
 In order to demonstrate this, we ran a modified version of example 1 in which we provided a phylogeny with 20 genomes as input (example.tree). ***PANPROVA*** was run on this phylogeny and the resulting 20 genomes were produced. Then, we computed genomic similarity between the generated genomes by means of the CVTree software (https://github.com/ghzuo/CVTree), that implements a well-established methodology for computing bacterial similarity (similarities.pdf). Then, we reconstructed the phylogenetic tree (tree.pdf). This experiment shows that the reconstructed tree follows the original phylogenetic relationship among the genomes
 
 
+### Test 7 : multiple sequence alignments of gene familes
+This example shows how to obtian a multiple sequence alignment for each generated gene family.</br>
+It uses MUSCLE to compute alignments. It is suppose that MUSCLE has laready been install on the system.</br>
+For each gene family a file MFS is create in the folder `omsa`.
+
 ----
 
 
