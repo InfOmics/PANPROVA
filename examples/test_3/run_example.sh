@@ -14,7 +14,7 @@ date
 
 echo "================================================================================"
 echo "Evolving..."
-cmd="bash ../../PANPROVA.sh --igenome ../genomes/escherichia_coli_O157H7.peg --hgtpool hgt_pool --ngenomes 1000 --trans-table 4 --oprefix ./example"
+cmd="bash ../../PANPROVA.sh --igenome ../genomes/escherichia_coli_O157H7.peg --hgtpool hgt_pool --ngenomes 1000 --trans-table 11 --oprefix ./example"
 echo $cmd
 date
 /usr/bin/time -f"%E %M" $cmd
