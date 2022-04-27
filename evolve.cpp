@@ -939,8 +939,8 @@ int main(int argc, char** argv){
                             }
 
                             new_genome->sequence = 
-                                new_genome->sequence.substr(0, range_start) + 
-                                new_genome->sequence.substr(i);
+                                new_genome->sequence.substr(0, range_start - c_deleted_nuc) + 
+                                new_genome->sequence.substr(i - c_deleted_nuc);
 
                             for(Locus &l : new_genome->loci){
                                 if(l.end >= new_genome->sequence.size()){
@@ -974,8 +974,8 @@ int main(int argc, char** argv){
                     }
 
                     new_genome->sequence = 
-                        new_genome->sequence.substr(0, range_start) + 
-                        new_genome->sequence.substr(i);
+                        new_genome->sequence.substr(0, range_start - c_deleted_nuc) + 
+                        new_genome->sequence.substr(i - c_deleted_nuc);
 
                     for(Locus &l : new_genome->loci){
                         if(l.end >= new_genome->sequence.size()){
@@ -1110,7 +1110,6 @@ int main(int argc, char** argv){
                 else{
                     hgt_pool.erase( hgt_pool.begin() + new_gene.first );
                 }
-
             }
         }
         
