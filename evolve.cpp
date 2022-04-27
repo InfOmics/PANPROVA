@@ -140,6 +140,9 @@ public:
                 state = 2;
             }
             else{
+                if(end >= g->sequence.size()){
+                    end = g->sequence.size()-1;
+                }
                 //std::cout<<"--->"<<start<<" "<<end<<" "<<c<<"\n";
                 g->loci.push_back( Locus(max_locus_id, start,end,c) );
                 max_locus_id++;
@@ -571,6 +574,15 @@ int main(int argc, char** argv){
     }
 
 
+
+    for(Locus &l : root_genome->loci){
+       if(l.end >= root_genome->sequence.size()){
+           std::cout<<"invalid loci end on root genome "<<l.end<<" "<<root_genome->sequence.size()<<"\n";
+           exit(1);
+        }
+    }
+
+
     int globalcount = 0;
     while(!treequeue.empty()){
         int tn = treequeue.front(); treequeue.pop();
@@ -600,6 +612,13 @@ int main(int argc, char** argv){
         for(int i=0; i<new_genome->loci.size(); i++){
         //    gene_parents[ GeneID(run+1, &(new_genome->loci[i])) ] = GeneID(parent_genome_id, &(parent_genome->loci[i]));
             gene_parents[std::pair<int,int>(current_genome_id, new_genome->loci[i].id)] = std::pair<int,int>(parent_genome_id, parent_genome->loci[i].id);
+        }
+
+        for(Locus &l : new_genome->loci){
+            if(l.end >= new_genome->sequence.size()){
+                std::cout<<"invalid loci end  "<<l.end<<" "<<new_genome->sequence.size()<<"\n";
+                exit(1);
+            }
         }
 
         //--------------------------------------------------------------------------------
@@ -751,6 +770,12 @@ int main(int argc, char** argv){
                 std::cout<<"old gene length "<< gene_length <<"; altered "<<total_altered<<" positions; relative new length "<<current_shift<<"; new length "<<new_gene_length<<"\n";
                 std::cout<<"result "<<new_genome->sequence.size()<< " "<<new_genome->loci.back()<<"\n";
 #endif
+                for(Locus &l : new_genome->loci){
+                    if(l.end >= new_genome->sequence.size()){
+                        std::cout<<"invalid loci end  "<<l.end<<" "<<new_genome->sequence.size()<<"\n";
+                        exit(1);
+                    }
+                }
                 
             }
             if( unif(rng) <= GENE_DUPLICATION_PROB ){
@@ -843,7 +868,21 @@ int main(int argc, char** argv){
                 }
 
                 //gene_parents[ GeneID(run+1, new_gene_id) ] = GeneID(parent_genome_id,parent_gene_id);
+
+                for(Locus &l : new_genome->loci){
+                    if(l.end >= new_genome->sequence.size()){
+                        std::cout<<"invalid loci end  "<<l.end<<" "<<new_genome->sequence.size()<<"\n";
+                        exit(1);
+                    }
+                }
              }
+        }
+
+        for(Locus &l : new_genome->loci){
+            if(l.end >= new_genome->sequence.size()){
+                std::cout<<"invalid loci end  "<<l.end<<" "<<new_genome->sequence.size()<<"\n";
+                exit(1);
+            }
         }
 
 
@@ -876,18 +915,25 @@ int main(int argc, char** argv){
                     }
                 }
 
-                //int range_start = new_genome->loci[gene_to_delete].start;
-                int range_start = new_genome->loci[gene_to_delete].start;
+                int gene_to_delete_start = new_genome->loci[gene_to_delete].start;
+                int gene_to_delete_end = new_genome->loci[gene_to_delete].end;
+                int gene_to_delete_id = new_genome->loci[gene_to_delete].id;
+
+                int range_start = gene_to_delete_start;
                 int range_length;
-                for(int i=range_start+1; i<new_genome->loci[gene_to_delete].end; i++){
+                int c_deleted_nuc = 0;
+
+                for(int i=range_start+1; i<gene_to_delete_end; i++){
                     if(covered[i] != covered[i-1]){
                         if(covered[i]){
-                            //we are closing a covering island
+                            //we are closing a uncovering island
                             range_length = i - range_start;
 
                             for(Locus &l : new_genome->loci){
-                                if(l.start >= i){
+                                if(l.start + c_deleted_nuc >= i ){
                                     l.start -= range_length;
+                                }
+                                if(l.end + c_deleted_nuc >= i){
                                     l.end -= range_length;
                                 }
                             }
@@ -896,23 +942,33 @@ int main(int argc, char** argv){
                                 new_genome->sequence.substr(0, range_start) + 
                                 new_genome->sequence.substr(i);
 
+                            for(Locus &l : new_genome->loci){
+                                if(l.end >= new_genome->sequence.size()){
+                                    std::cout<<"(internal1) invalid loci end  "<<l.end<<" "<<new_genome->sequence.size()<<"\n";
+                                    exit(1);
+                                }
+                            }
+
                             range_start = -1;
 
                             deleted_nucleotides += range_length;
+                            c_deleted_nuc += range_length;
                         }
                         else{
-                            //we are opening a covering island
+                            //we are opening a uncovering island
                             range_start = i;
                         }
                     }
                 }
                 if(range_start != -1){
-                    int i = new_genome->loci[gene_to_delete].end;
+                    int i = gene_to_delete_end;
                     range_length = i - range_start;
 
                     for(Locus &l : new_genome->loci){
-                        if(l.start >= i){
+                        if(l.start + c_deleted_nuc >= i){
                             l.start -= range_length;
+                        }
+                        if(l.end + c_deleted_nuc >= i ){
                             l.end -= range_length;
                         }
                     }
@@ -920,6 +976,13 @@ int main(int argc, char** argv){
                     new_genome->sequence = 
                         new_genome->sequence.substr(0, range_start) + 
                         new_genome->sequence.substr(i);
+
+                    for(Locus &l : new_genome->loci){
+                        if(l.end >= new_genome->sequence.size()){
+                            std::cout<<"(internal2) invalid loci end  "<<l.end<<" "<<new_genome->sequence.size()<<"\n";
+                            exit(1);
+                        }
+                    }
 
                     deleted_nucleotides += range_length;
                 }
@@ -933,6 +996,13 @@ int main(int argc, char** argv){
                 std::cout<<"genome size is now "<<new_genome->sequence.size()<<"\n";
                 std::cout<<"last locus is "<<new_genome->loci[ new_genome->loci.size()-1 ]<<"\n";
 #endif
+
+                for(Locus &l : new_genome->loci){
+                    if(l.end >= new_genome->sequence.size()){
+                        std::cout<<"invalid loci end  "<<l.end<<" "<<new_genome->sequence.size()<<"\n";
+                        exit(1);
+                    }
+                }
 
             }
             if( unif(rng) <= GENESET_VARIATION_ADD){
@@ -975,9 +1045,16 @@ int main(int argc, char** argv){
 
                 }
                 else{
+                    std::cout<<"size "<< new_genome->sequence.size() <<"\n";
                     bool *covered = (bool*)calloc( new_genome->sequence.size(), sizeof(bool));
+                    if(covered==NULL){
+                        std::cout<<"OPSSSSSSSSSSSSSSS\n";
+                    }
                     for(Locus &l : new_genome->loci){
                         for(int i=l.start; i<l.end; i++){
+                            if(i>=new_genome->sequence.size() ){
+                                std::cout<<"OPSSSSSSSSSSSSSSS i "<<i<<" "<< new_genome->sequence.size() <<"\n";
+                            }
                             covered[i] = true;
                         }
                     }
