@@ -2,6 +2,7 @@ import sys
 
 from BCBio import GFF
 from Bio import SeqIO
+import Bio
 
 
 if len(sys.argv) != 4:
@@ -43,16 +44,17 @@ for record in GFF.parse(in_handle, base_dict=seq_dict):
         for feature in record.features:
             print(feature)
             if feature.type == 'CDS' or feature.type == 'gene':
-                strand = feature.location.strand
-                start = int(feature.location.start)
-                end = int(feature.location.end)
-                print(start,end, strand)
-                if start > end:
+                if isinstance(feature.location , Bio.SeqFeature.FeatureLocation):
+                    strand = feature.location.strand
+                    start = int(feature.location.start)
+                    end = int(feature.location.end)
                     print(start,end, strand)
-                    t = start
-                    start = end
-                    end = t
-                gene_loci.append( (start,end,strand) )
+                    if start > end:
+                        print(start,end, strand)
+                        t = start
+                        start = end
+                        end = t
+                    gene_loci.append( (start,end,strand) )
 
 in_handle.close()
 

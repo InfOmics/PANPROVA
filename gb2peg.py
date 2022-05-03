@@ -1,5 +1,6 @@
 import sys
 from Bio import SeqIO
+import Bio
 
 
 sequence = ""
@@ -14,24 +15,27 @@ for record in SeqIO.parse(sys.argv[1], 'genbank'):
         sequence = "N" + str(record.sequence)
     for feature in record.features:
         if feature.type == 'CDS':
-            strand = feature.location.strand
-            start = int(feature.location.start)
-            end = int(feature.location.end)
-            #print("!# ",start,end, strand, end-start, (end-start)%3)
-            if start > end:
-                print(start,end, strand)
-                t = start
-                start = end
-                end = t
-            gene_loci.append( (start,end,strand) )
+            if isinstance(feature.location , Bio.SeqFeature.FeatureLocation):
+                #print(feature)
+                #print(type(feature.location))
+                strand = feature.location.strand
+                start = int(feature.location.start)
+                end = int(feature.location.end)
+                #print("!# ",start,end, strand, end-start, (end-start)%3)
+                if start > end:
+                    print(start,end, strand)
+                    t = start
+                    start = end
+                    end = t
+                gene_loci.append( (start,end,strand) )
 
-            # loci = (start,end,strand)
-            # print(loci, (loci[1]-loci[0])%3  )
-            # gene_seq = sequence[loci[0]:loci[1]]
-            # print( len(gene_seq)%3 )
-            # print( str(Seq(gene_seq).translate(table=4)) )
-            # print(feature.qualifiers['translation'])
-            # #print(feature.translate(seq, cds=False))
+                # loci = (start,end,strand)
+                # print(loci, (loci[1]-loci[0])%3  )
+                # gene_seq = sequence[loci[0]:loci[1]]
+                # print( len(gene_seq)%3 )
+                # print( str(Seq(gene_seq).translate(table=4)) )
+                # print(feature.qualifiers['translation'])
+                # #print(feature.translate(seq, cds=False))
 
 sequence = sequence.upper()
 gene_loci = sorted(gene_loci)

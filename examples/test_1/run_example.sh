@@ -12,6 +12,7 @@ date
 /usr/bin/time -f"%E %M" $cmd
 date
 
+
 echo "================================================================================"
 echo "Evolving..."
 cmd="bash ../../PANPROVA.sh --igenome ../genomes/mycoplasma_genitalium_G37.peg --hgtpool hgt_pool --ngenomes 1000 --trans-table 4 --oprefix ./example"
