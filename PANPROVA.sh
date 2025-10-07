@@ -177,7 +177,7 @@ phylofile="${oprefix}.tree"
 echo ""
 echo "################################################################################"
 echo "No phylogenomic tree was provided. A random tree for ${ngenomes} will be created in ${phylofile}."
-cmd="python3 ${sdir}/generate_tree.py ${ngenomes} ${rseed} ${phylofile}"
+cmd="python3 ${sdir}/generate_tree_2.py ${ngenomes} ${rseed} ${phylofile}"
 echo "$cmd"
 $cmd
 echo "--------------------------------------------------------------------------------"
