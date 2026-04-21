@@ -6,7 +6,7 @@ echo "##########################################################################
 sdir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
 sdir=`dirname $sdir`
 
-if [ -z "$PANPROVA_PATH"]; then
+if [ -z "$PANPROVA_PATH" ]; then
 	echo "environment variable PANPROVA_PATH not set!"
 	echo "using location: $sdir"
 else
@@ -44,7 +44,7 @@ echo "[--loc-var-prob ]: locus variation probability. Default value is ${locvarp
 echo "[--gene-dup-prob ]: gene duplciation probability. Default value is ${genedupprob}."
 echo "[--gset-var-perc ]: gene set variation percentage. Default value is ${gsetvarperc}."
 echo "[--gene-add-prob ]: gene add probability. Default value is ${geneaddprob}."
-echo "[--tran-stable ]: translation table to be used for generating translations in GBFF files. Default value is ${trasntable}."
+echo "[--tran-stable ]: translation table to be used for generating translations in GBFF files. Default value is ${transtable}."
 }
 
 # $@ is all command line parameters passed to the script.
