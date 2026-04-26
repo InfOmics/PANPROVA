@@ -10,12 +10,12 @@ struct EvolveConfig {
     std::string output_prefix;           // argv[3]
     std::string itree;             // argv[4]
     std::string isubm;             // argv[5]
-    float gene_variation_prob;     // argv[6]
-    float locus_variation_prob;    // argv[7]
-    float gene_duplication_prob;   // argv[8]
-    float geneset_variation;       // argv[9]
-    float geneset_variation_add;   // argv[10]
-    float geneset_variation_remove;// = 1 - add
+    double gene_variation_prob;     // argv[6]
+    double locus_variation_prob;    // argv[7]
+    double gene_duplication_prob;   // argv[8]
+    double geneset_variation;       // argv[9]
+    double geneset_variation_add;   // argv[10]
+    double geneset_variation_remove;// = 1 - add
     int   rand_seed;               // argv[11]
     
 };
