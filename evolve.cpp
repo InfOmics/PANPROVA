@@ -5,412 +5,26 @@
 #include <map>
 #include <set>
 #include <algorithm>
-#include <ctime>        
+#include <ctime>
 #include <cstdlib>      // std::rand, std::srand
 #include <cmath>        // std::ceil
 #include <random>
 
 #include <queue>
 
+#include "src/lib/Locus.hh"
+#include "src/lib/Genome.hh"
+#include "src/utils/gene.hh"
+#include "src/utils/substitution.hh"
+#include "src/utils/randoms.hh"
+#include "src/utils/codon.hh"
+#include "src/cli.hh"
+
+
 //#define VERBOSE
 
 
-// #define NOF_GENOMES 999
-// #define GENE_VARIATION_PROB 0.5	//probability of variation when ancestor gene is aquired
-// #define LOCUS_VARIATION_PROB 0.01 // 0.05  // probability of variating a nucleotide in a variated sequence
-// #define GENE_DUPLICATION_PROB 0.001	//probability of duplicating a gene
-// #define GENESET_VARIATION 0.01	//percentage of variation in gene sets, it includes creation of new genes and removal of inherited ones
-// #define GENESET_VARIATION_ADD 0.9 //probability that the variation is a a gene add
-// #define GENESET_VARIATION_REMOVE 0.1 //probability hat the variation if a gene removal
-// #define RAND_SEED 123456789
 
-
-void usage(std::string cmd){
-    std::cout<<"Usage: "<<cmd<<" root_genome.peg hgt_pool.hgt oprefix tree.genome_parents sub_matrix GENE_VARIATION_PROB LOCUS_VARIATION_PROB GENE_DUPLICATION_PROB GENESET_VARIATION GENESET_VARIATION_ADD RAND_SEED\n";
-}
-
-
-
-
-class Locus{
-public:
-    int id;
-    int start;
-    int end;
-    int strand;// 1, -1
-
-    Locus(){
-        this->id = -1;
-        this->start = -1;
-        this->end = -1;
-        this->strand = 0;
-    }
-
-    /*Locus(int _start, int _end, int _strand)
-        : start(_start), end(_end), strand(_strand)
-    {
-        this->id = -1;
-    }*/
-
-    Locus(int _id, int _start, int _end, int _strand)
-        : id(_id), start(_start), end(_end), strand(_strand)
-    {
-    }
-
-    Locus(const Locus &l){
-        this->id = l.id;
-        this->start = l.start;
-        this->end = l.end;
-        this->strand= l.strand;
-    }
-
-    bool operator < (const Locus& a) const
-    {
-        if(start == a.start){
-            if(end == a.end){
-                return strand > a.strand;
-            }
-            return end < a.end;
-        }
-        return start < a.start;
-    }
-
-    friend std::ostream& operator<<(std::ostream& os, Locus const & tc) {
-        return os << "("<<tc.id<<","<<tc.start<<","<<tc.end<<","<<tc.strand<<")";
-    }
-};
-
-
-class Genome{
-public:
-    std::string sequence;
-    std::vector<Locus> loci;
-
-    Genome(){
-        sequence = "";
-    }
-
-    Genome(const Genome& o){
-        this->sequence = o.sequence;
-        for(Locus x : o.loci){
-            this->loci.push_back(x);
-        }
-    }
-
-    Genome*
-    clone(){
-        Genome *g = new Genome();
-        g->sequence = this->sequence;
-        for(Locus x : this->loci){
-            g->loci.push_back(x);
-        }
-        return g;
-    }
-
-    static 
-    Genome* read_from_file(std::string ifile) {
-        ifile.erase(std::remove_if(ifile.begin(), ifile.end(), [](unsigned char x){return std::isspace(x);}), ifile.end());
-        Genome *g = new Genome();
-
-        std::ifstream file(ifile);
-        std::string line; 
-        
-        if(std::getline(file, line)){
-            g->sequence = std::string(line);
-            std::transform(g->sequence.begin(), g->sequence.end(),g->sequence.begin(), ::toupper);
-            //std::cout<<"[sequence end]\n";
-        }
-        else{
-            //std::cout<<"[no sequence]\n";
-            return NULL;
-        }
-
-        int max_locus_id = 0;
-        int c;
-        int state = 0;
-        int start, end;
-        char strand;
-        while(file >> c){
-            if(state == 0){
-                start = c;
-                state = 1;
-            }
-            else if(state == 1){
-                end = c;
-                state = 2;
-            }
-            else{
-                if(end >= g->sequence.size()){
-                    end = g->sequence.size()-1;
-                }
-                //std::cout<<"--->"<<start<<" "<<end<<" "<<c<<"\n";
-                g->loci.push_back( Locus(max_locus_id, start,end,c) );
-                max_locus_id++;
-
-                state = 0;
-            }
-        }
-        //std::cout<<"[loci end]\n";
-        file.close();
-
-        std::sort(g->loci.begin(), g->loci.end());
-        
-        return g;
-    };
-
-    static
-    char rc_symbol(char c){
-        if(c == 'A') return 'T';
-        if(c == 'T') return 'A';
-        if(c == 'C') return 'G';
-        if(c == 'G') return 'C';
-        return 'N';
-    };
-
-    // std::vector<std::string>*
-    // get_gene_sequences(){
-    //     std::vector<std::string> *v = new std::vector<std::string>();
-    //     for(auto & locus : this->loci){
-    //         if(locus.strand == 1){
-    //             std::string s = this->sequence.substr(locus.start, locus.end-locus.start);
-    //             v->push_back(s);
-    //         }
-    //         else{
-    //             std::string t = this->sequence.substr(locus.start, locus.end-locus.start);
-
-    //             std::string s = this->sequence.substr(locus.start, locus.end-locus.start);
-    //             for(int i=0; i<s.size(); i++){
-    //                 s[i] = Genome::rc_symbol( t[ s.size()-1-i ] );
-    //             }
-
-    //             v->push_back(s);
-    //         }
-    //     }
-    //     return v;
-    // };
-
-
-};
-
-
-//AUG GUG and UUG -> ATG GTG TTG
-bool
-has_start_codon(std::string& s){
-    if(s.size() < 3) return false;
-    if((s[0]=='A')&&(s[1]=='T')&&(s[2]=='G')) return true;
-    if((s[0]=='G')&&(s[1]=='T')&&(s[2]=='G')) return true;
-    if((s[0]=='T')&&(s[1]=='T')&&(s[2]=='G')) return true;
-    return false;
-}
-
-//TAA, TGA, TAG
-bool
-has_stop_codon(std::string& s){
-    if(s.size() < 3) return false;
-    if((s[s.size()-3]=='T')&&(s[s.size()-2]=='A')&&(s[s.size()-1]=='A')) return true;
-    if((s[s.size()-3]=='T')&&(s[s.size()-2]=='G')&&(s[s.size()-1]=='A')) return true;
-    if((s[s.size()-3]=='T')&&(s[s.size()-2]=='A')&&(s[s.size()-1]=='G')) return true;
-    return false;
-}
-
-
-int randint (int i) { return std::rand()%i;}
-int randint (int i,int j) { return (std::rand()%(j-i))+i;}
-
-int int2codons_len = 58;
-static const std::string int2codons[] = {
-    "AAA",
-    "AAC",
-    "AAG",
-    "AAT",
-    "ACA",
-    "ACC",
-    "ACG",
-    "ACT",
-    "AGA",
-    "AGC",
-    "AGG",
-    "AGT",
-    "ATA",
-    "ATC",
-    //"ATG",
-    "ATT",
-    "CAA",
-    "CAC",
-    "CAG",
-    "CAT",
-    "CCA",
-    "CCC",
-    "CCG",
-    "CCT",
-    "CGA",
-    "CGC",
-    "CGG",
-    "CGT",
-    "CTA",
-    "CTC",
-    "CTG",
-    "CTT",
-    "GAA",
-    "GAC",
-    "GAG",
-    "GAT",
-    "GCA",
-    "GCC",
-    "GCG",
-    "GCT",
-    "GGA",
-    "GGC",
-    "GGG",
-    "GGT",
-    "GTA",
-    "GTC",
-    //"GTG",
-    "GTT",
-    //"TAA",
-    "TAC",
-    //"TAG",
-    "TAT",
-    "TCA",
-    "TCC",
-    "TCG",
-    "TCT",
-    //"TGA",
-    "TGC",
-    "TGG",
-    "TGT",
-    "TTA",
-    "TTC",
-    //"TTG",
-    "TTT",
-    };
-
-bool to_revert(std::string &s, int p){
-    //"ATG",
-    //"GTG",
-    //"TAA",
-    //"TAG",
-    //"TGA",
-    //"TTG",
-    if(s[p]=='A' && s[p+1]=='T' && s[p+2]=='G'){
-        return true;
-    }
-    else if(s[p]=='G' && s[p+1]=='T' && s[p+2]=='G'){
-        return true;
-    }
-    else if(s[p]=='T' && s[p+1]=='A' && s[p+2]=='A'){
-        return true;
-    }
-    else if(s[p]=='T' && s[p+1]=='A' && s[p+2]=='G'){
-        return true;
-    }
-    else if(s[p]=='T' && s[p+1]=='G' && s[p+2]=='A'){
-        return true;
-    }
-    else if(s[p]=='T' && s[p+1]=='T' && s[p+2]=='G'){
-        return true;
-    }
-    else{
-        return false;
-    }
-};
-
-static const char int2nuc[] = {'A','C','G','T'};
-
-// std::string*
-// make_random_sequence(int min_length, int max_length){
-
-//     int length = randint(min_length, max_length) + 6;
-//     char * c = new char[length + 1];
-//     c[0] = 'A'; c[1] = 'T'; c[2] = 'G';
-//     c[length-3] = 'T'; c[length-2] = 'A'; c[length-1] = 'A'; 
-//     c[length] = 0;
-
-//     for(int i=0; i<length; i++){
-//         c[i] = int2nuc[ randint(0,4) ];
-//     }
-
-//     std::string *s = new std::string(c);
-//     return s;
-// };
-
-
-std::string*
-make_random_sequence(int min_length, int max_length){
-
-    int length = randint(min_length, max_length) + 6;
-    if(length%3==1) length+=2;
-    if(length%3==2) length+=1;
-
-    char * c = new char[length + 1];
-
-    for(int i=0; i<length-3; i+=3){
-        //c[i] = int2nuc[ randint(0,4) ];
-        std::string s = int2codons[randint(0, int2codons_len)];
-        
-        c[i] = s[0];
-        c[i+1] = s[1];
-        c[i+2] = s[2];
-
-    }
-
-    c[0] = 'A'; c[1] = 'T'; c[2] = 'G';
-    c[length-3] = 'T'; c[length-2] = 'A'; c[length-1] = 'A'; 
-    c[length] = 0;
-
-    std::string *s = new std::string(c);
-    return s;
-};
-
-
-
-std::pair<int, std::string*>
-generate_new_gene(std::vector<std::string> &hgt_pool, int min_length, int max_length){
-    if(hgt_pool.size() == 0){
-        return std::pair<int, std::string*>(-1, make_random_sequence(min_length,max_length));
-    }
-    else{
-        int i = randint(hgt_pool.size());
-        return std::pair<int, std::string*>(i, &(hgt_pool[i]));
-    }
-};
-
-
-char** read_subsitution_matrix(std::string ifile){
-    char ** m = new char*[4];
-    for(int i=0; i<4; i++){
-        m[i] = new char[100];
-    }
-
-    std::ifstream file(ifile);
-    int x;
-
-    for(int i=0; i<4; i++){
-        int p=0;
-        for(int k=0;k<100; k++){
-            m[i][k] = int2nuc[i];
-        }
-
-        for(int j=0; j<4; j++){
-            file >> x;
-            //std::cout<<"@ "<<x<<" "<<int2nuc[j]<<"\n";
-            for(int k=0;k<x && p<100; k++, p++){
-                m[i][p] = int2nuc[j];
-            }
-        }
-    }
-
-    file.close();
-
-    return m;
-};
-char substitute(char x, char** sub_matrix){
-    if(x=='A') return sub_matrix[0][randint(0,99)];
-    else if(x=='C') return sub_matrix[1][randint(0,99)];
-    else if(x=='G') return sub_matrix[2][randint(0,99)];
-    else if(x=='T') return sub_matrix[3][randint(0,99)];
-    return 'A';
-}
 
 
 int main(int argc, char** argv){
@@ -419,6 +33,9 @@ int main(int argc, char** argv){
         usage(argv[0]);
         return 0;
     }
+
+    EvolveConfig config;
+    parse_args(argc, argv, config);
 
 
     std::string itree = argv[4];
@@ -445,7 +62,7 @@ int main(int argc, char** argv){
 
     std::cout<<"----------------------------------------\n";
     std::cout<<"Reading root genome...\n";
-    Genome *root_genome = Genome::read_from_file(argv[1]);
+    Genome *root_genome = Genome::read_from_file(config.root_genome);
 
     std::cout<<"Root genome is "<<root_genome->sequence.size()<<" nucleotides long, with "<<root_genome->loci.size()<<" genetic loci\n";
 
@@ -465,7 +82,7 @@ int main(int argc, char** argv){
     std::cout<<"----------------------------------------\n";
     std::cout<<"Reading HGT pool...\n";
     std::vector<std::string> hgt_pool;
-    std::ifstream file(argv[2]);
+    std::ifstream file(config.hgt_pool);
     std::string line;
     std::string gseq;
     while(std::getline(file, line)){
@@ -490,7 +107,10 @@ int main(int argc, char** argv){
     std::cout<<"----------------------------------------\n";
     std::cout<<"Shuffling HGT pool...\n";
     //std::srand ( unsigned ( std::time(0) ) );
-    std::srand ( unsigned ( RAND_SEED ) );
+
+
+    std::srand ( unsigned ( config.rand_seed ) );
+    
     std::random_shuffle(hgt_pool.begin(), hgt_pool.end());
     if(hgt_pool.size() > 1){
         std::cout<<hgt_pool[0].substr(0,50)<<"\n";
@@ -498,10 +118,10 @@ int main(int argc, char** argv){
     }
     std::cout<<"----------------------------------------\n";
     std::cout<<"Reading population tree...\n";
-    std::cout<<argv[4]<<"\n";
+    std::cout<<config.itree<<"\n";
     std::map<int, std::vector<int> > tchilds;
     std::map<int,int> genome_parents;
-    std::ifstream tfile(argv[4]);
+    std::ifstream tfile(config.itree);
     int tn, tp;
     while( tfile >>  tn){
         tfile >> tp;
@@ -515,8 +135,8 @@ int main(int argc, char** argv){
     tfile.close();
     std::cout<<"----------------------------------------\n";
     std::cout<<"Reading substitution matrix...\n";
-    std::cout<<argv[5]<<"\n";
-    char **subm = read_subsitution_matrix(argv[5]);
+    std::cout<<config.isubm<<"\n";
+    char **subm = read_subsitution_matrix(config.isubm);
 
     for(int i=0; i<4; i++){
         std::cout<<int2nuc[i]<<": ";
@@ -552,7 +172,7 @@ int main(int argc, char** argv){
 
 
     std::mt19937_64 rng;
-    rng.seed(RAND_SEED);
+    rng.seed(config.rand_seed);
     std::uniform_real_distribution<double> unif(0, 1);
 
     int global_gene_id = root_genome->loci.size();
@@ -627,7 +247,7 @@ int main(int argc, char** argv){
 
 
         for(int gv = 0; gv< parent_genome->loci.size(); gv++){
-            if( unif(rng) <= GENE_VARIATION_PROB){
+            if( unif(rng) <= config.gene_variation_prob){
                 
 #ifdef VERBOSE
                 std::cout<<"--------------------\n";
@@ -655,7 +275,7 @@ int main(int argc, char** argv){
                 int total_altered = 0;
                 for(int p=0; p<gene_length; p++){
                     if(!constrained[p]){
-                        if( unif(rng) <= LOCUS_VARIATION_PROB){
+                        if( unif(rng) <= config.locus_variation_prob){
                             total_altered++;
                             int alteration = randint(0,4);
                             if(alteration == 0){
@@ -778,7 +398,7 @@ int main(int argc, char** argv){
                 }
                 
             }
-            if( unif(rng) <= GENE_DUPLICATION_PROB ){
+            if( unif(rng) <= config.gene_duplication_prob ){
 #ifdef VERBOSE
                 std::cout<<"duplicating "<<new_genome->loci[gv]<<"\n";
 #endif
@@ -894,10 +514,10 @@ int main(int argc, char** argv){
         std::vector< std::pair<int, std::string*> > genes_to_add;
 
 #ifdef VERBOSE
-        std::cout<<"gene variation set size is "<<std::ceil(  parent_genome->loci.size() * GENESET_VARIATION )<<" / "<<parent_genome->loci.size()<<"\n";
+        std::cout<<"gene variation set size is "<<std::ceil(  parent_genome->loci.size() * config.geneset_variation )<<" / "<<parent_genome->loci.size()<<"\n";
 #endif
-        for(int gv = 0; gv<std::ceil(  parent_genome->loci.size() * GENESET_VARIATION ); gv++){
-            if( unif(rng) <= GENESET_VARIATION_REMOVE){
+        for(int gv = 0; gv<std::ceil(  parent_genome->loci.size() * config.geneset_variation ); gv++){
+            if( unif(rng) <= config.geneset_variation_remove){
                 deleted_genes++;
                 int gene_to_delete = randint( new_genome->loci.size() );
 
@@ -1005,7 +625,7 @@ int main(int argc, char** argv){
                 }
 
             }
-            if( unif(rng) <= GENESET_VARIATION_ADD){
+            if( unif(rng) <= config.geneset_variation_add){
                 std::pair<int, std::string*> new_gene = generate_new_gene(hgt_pool, min_root_gene_length, max_root_gene_length);
                 genes_to_add.push_back(new_gene);
 
@@ -1131,7 +751,7 @@ int main(int argc, char** argv){
 
     std::cout<<"----------------------------------------\n";
 
-    std::string oprefix(argv[3]);
+    std::string oprefix(config.output_prefix);
 
     //std::map<int,int> genome_parents;
     //std::map<GeneID,GeneID> gene_parents;
