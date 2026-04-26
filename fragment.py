@@ -140,16 +140,3 @@ with warnings.catch_warnings():
             p2 = g[1] - fstarts[f2]
 
         print("G:",ctype,g[3], g[2], f1, p1, f2, p2, sep=" ")
-
-
-
-
-
-
-
-
-
-
-    
-
-    
