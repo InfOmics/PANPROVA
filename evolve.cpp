@@ -36,17 +36,18 @@ int main(int argc, char** argv){
 
     EvolveConfig config;
     parse_args(argc, argv, config);
+    
+    init_random_seed(config.rand_seed);
 
-
-    std::string itree = argv[4];
-    std::string isunm = argv[5];
-    float GENE_VARIATION_PROB = atof(argv[6]);
-    float LOCUS_VARIATION_PROB = atof(argv[7]);
-    float GENE_DUPLICATION_PROB = atof(argv[8]);
-    float GENESET_VARIATION = atof(argv[9]);
-    float GENESET_VARIATION_ADD = atof(argv[10]);
-    float GENESET_VARIATION_REMOVE = 1.0 - GENESET_VARIATION_ADD;
-    int RAND_SEED = atoi(argv[11]);
+    // std::string itree = argv[4];
+    // std::string isunm = argv[5];
+    // float GENE_VARIATION_PROB = atof(argv[6]);
+    // float LOCUS_VARIATION_PROB = atof(argv[7]);
+    // float GENE_DUPLICATION_PROB = atof(argv[8]);
+    // float GENESET_VARIATION = atof(argv[9]);
+    // float GENESET_VARIATION_ADD = atof(argv[10]);
+    // float GENESET_VARIATION_REMOVE = 1.0 - GENESET_VARIATION_ADD;
+    // int RAND_SEED = atoi(argv[11]);
 
 /*#define NOF_GENOMES 999
 #define GENE_VARIATION_PROB 0.5	//probability of variation when ancestor gene is aquired
@@ -109,7 +110,7 @@ int main(int argc, char** argv){
     //std::srand ( unsigned ( std::time(0) ) );
 
 
-    std::srand ( unsigned ( config.rand_seed ) );
+    // std::srand ( unsigned ( config.rand_seed ) );
     
     std::random_shuffle(hgt_pool.begin(), hgt_pool.end());
     if(hgt_pool.size() > 1){
@@ -170,10 +171,9 @@ int main(int argc, char** argv){
         gene_parents[ std::pair<int,int>(0, l.id) ] = std::pair<int,int>(-1, -1);
     }
 
-
-    std::mt19937_64 rng;
-    rng.seed(config.rand_seed);
-    std::uniform_real_distribution<double> unif(0, 1);
+    // std::mt19937_64 rng;
+    // rng.seed(config.rand_seed);
+    // std::uniform_real_distribution<double> unif(0, 1);
 
     int global_gene_id = root_genome->loci.size();
 
@@ -247,7 +247,7 @@ int main(int argc, char** argv){
 
 
         for(int gv = 0; gv< parent_genome->loci.size(); gv++){
-            if( unif(rng) <= config.gene_variation_prob){
+            if( generate_unif() <= config.gene_variation_prob){
                 
 #ifdef VERBOSE
                 std::cout<<"--------------------\n";
@@ -275,7 +275,7 @@ int main(int argc, char** argv){
                 int total_altered = 0;
                 for(int p=0; p<gene_length; p++){
                     if(!constrained[p]){
-                        if( unif(rng) <= config.locus_variation_prob){
+                        if( generate_unif() <= config.locus_variation_prob){
                             total_altered++;
                             int alteration = randint(0,4);
                             if(alteration == 0){
@@ -398,7 +398,7 @@ int main(int argc, char** argv){
                 }
                 
             }
-            if( unif(rng) <= config.gene_duplication_prob ){
+            if( generate_unif() <= config.gene_duplication_prob ){
 #ifdef VERBOSE
                 std::cout<<"duplicating "<<new_genome->loci[gv]<<"\n";
 #endif
@@ -517,7 +517,7 @@ int main(int argc, char** argv){
         std::cout<<"gene variation set size is "<<std::ceil(  parent_genome->loci.size() * config.geneset_variation )<<" / "<<parent_genome->loci.size()<<"\n";
 #endif
         for(int gv = 0; gv<std::ceil(  parent_genome->loci.size() * config.geneset_variation ); gv++){
-            if( unif(rng) <= config.geneset_variation_remove){
+            if( generate_unif() <= config.geneset_variation_remove){
                 deleted_genes++;
                 int gene_to_delete = randint( new_genome->loci.size() );
 
@@ -625,7 +625,7 @@ int main(int argc, char** argv){
                 }
 
             }
-            if( unif(rng) <= config.geneset_variation_add){
+            if( generate_unif() <= config.geneset_variation_add){
                 std::pair<int, std::string*> new_gene = generate_new_gene(hgt_pool, min_root_gene_length, max_root_gene_length);
                 genes_to_add.push_back(new_gene);
 
