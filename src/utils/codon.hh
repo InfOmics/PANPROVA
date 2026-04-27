@@ -3,6 +3,10 @@
 
 #include <string>
 
+
+// 64 all possible codons except the 6 special ones, so 64-6=58:
+// the three start codons (ATG, GTG, TTG) and the three stop codons
+// (TAA, TAG, TGA)
 const int int2codons_len = 58;
 static const std::string int2codons[] = {
     "AAA",

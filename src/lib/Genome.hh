@@ -10,7 +10,9 @@
 
 class Genome{
 public:
+    // entire sequence of the genome
     std::string sequence;
+    // vector of loci (genes) in the genome
     std::vector<Locus> loci;
 
     Genome(){
@@ -34,6 +36,7 @@ public:
         return g;
     }
 
+    // read .peg file
     static
     Genome* read_from_file(std::string ifile) {
         ifile.erase(std::remove_if(ifile.begin(), ifile.end(), [](unsigned char x){return std::isspace(x);}), ifile.end());
@@ -85,6 +88,7 @@ public:
         return g;
     };
 
+    // reverse complement of a symbol
     static
     char rc_symbol(char c){
         if(c == 'A') return 'T';

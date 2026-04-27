@@ -6,10 +6,10 @@
 
 class Locus{
 public:
-    int id;
-    int start;
-    int end;
-    int strand;// 1, -1
+    int id; // gene id
+    int start; // start position of the gene in the genome
+    int end; // end position of the gene in the genome
+    int strand; // 1, -1
 
     Locus(){
         this->id = -1;
