@@ -27,6 +27,12 @@ genedupprob="0.001"
 gsetvarperc="0.01"
 geneaddprob="0.9"
 transtable="11"
+# TODO: update readme to include these new parameters
+genefusionprob="0.001"
+subgenedupprob="0.001"
+intrasubgenedupprob="0.9"
+# not used
+# genefissionprob="0.001"
 
 
 show_usage(){
@@ -45,6 +51,10 @@ echo "[--gene-dup-prob ]: gene duplciation probability. Default value is ${gened
 echo "[--gset-var-perc ]: gene set variation percentage. Default value is ${gsetvarperc}."
 echo "[--gene-add-prob ]: gene add probability. Default value is ${geneaddprob}."
 echo "[--tran-stable ]: translation table to be used for generating translations in GBFF files. Default value is ${transtable}."
+echo "[--gene-fusion-prob ]: gene fusion probability. Default value is ${genefusionprob}."
+echo "[--sub-gene-dup-prob ]: sub-gene duplication probability. Default value is ${subgenedupprob}."
+echo "[--intra-sub-gene-dup-prob ]: intra-sub-gene duplication probability. Default value is ${intrasubgenedupprob}."
+# echo "[--gene-fission-prob ]: gene fission probability. Default value is ${genefissionprob}."
 }
 
 # $@ is all command line parameters passed to the script.
@@ -52,7 +62,8 @@ echo "[--tran-stable ]: translation table to be used for generating translations
 # -l is for long options with double dash like --version
 # the comma separates different long options
 # -a is for long options with single dash like -version
-options=$(getopt -l "help,oprefix:,igenome:,hgtpool:,psub:,phylo:,ngenomes:,rseed:,gene-var-prob:,loc-var-prob:,gene-dup-prob:,gset-var-perc:,gene-add-prob:,trans-table:" -o "ho:g:H:M:P:n:r:f:l:d:j:a:e:" -a -- "$@")
+# ,gene-fission-prob: F:
+options=$(getopt -l "help,oprefix:,igenome:,hgtpool:,psub:,phylo:,ngenomes:,rseed:,gene-var-prob:,loc-var-prob:,gene-dup-prob:,gset-var-perc:,gene-add-prob:,trans-table:,gene-fusion-prob:,sub-gene-dup-prob:,intra-sub-gene-dup-prob:" -o "ho:g:H:M:P:n:r:f:l:d:j:a:e:f:d:i:" -a -- "$@")
 # set --:
 # If no arguments follow this option, then the positional parameters are unset. Otherwise, the positional parameters 
 # are set to the arguments, even if some of them begin with a ‘-’.
@@ -117,6 +128,22 @@ case $1 in
     shift
 	transtable=$1
     ;;
+-f|--gene-fusion-prob)
+    shift
+    genefusionprob=$1
+    ;;
+-d|--sub-gene-dup-prob)
+    shift
+    subgenedupprob=$1
+    ;;
+-i|--intra-sub-gene-dup-prob)
+    shift
+    intrasubgenedupprob=$1
+    ;;
+# -F|--gene-fission-prob)
+#     shift
+#     genefissionprob=$1
+#     ;;
 --)
     shift
     break;;
@@ -168,7 +195,11 @@ echo "genedupprob ${genedupprob}"
 echo "gsetvarperc ${gsetvarperc}"
 echo "geneaddprob ${geneaddprob}"
 echo "transtable ${transtable}"
+echo "genefusionprob ${genefusionprob}"
+echo "subgenedupprob ${subgenedupprob}"
+echo "intrasubgenedupprob ${intrasubgenedupprob}"
 echo ""
+# echo "genefissionprob ${genefissionprob}"
 
 
 if [ -z "${phylofile}" ]
@@ -192,7 +223,7 @@ fi
 echo ""
 echo "################################################################################"
 echo "Everything is ready! Evolving..."
-cmd="${sdir}/evolve ${igenomefile} ${hgtpoolfile} ${oprefix} ${phylofile} ${psubfile} ${genevarprob} ${locvarprob} ${genedupprob} ${gsetvarperc} ${geneaddprob} ${rseed}"
+cmd="${sdir}/evolve ${igenomefile} ${hgtpoolfile} ${oprefix} ${phylofile} ${psubfile} ${genevarprob} ${locvarprob} ${genedupprob} ${gsetvarperc} ${geneaddprob} ${rseed} ${genefusionprob} ${subgenedupprob} ${intrasubgenedupprob}" # to add ${genefissionprob}
 echo "$cmd"
 $cmd
 
