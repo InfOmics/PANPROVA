@@ -19,17 +19,26 @@
 #include "src/utils/randoms.hh"
 #include "src/utils/codon.hh"
 #include "src/cli.hh"
+#include "src/lib/Chimera.hh"
 
-
-//#define VERBOSE
+// #define VERBOSE
 
 
 
 
 
 int main(int argc, char** argv){
+
+    #ifdef VERBOSE
+    std::cout<<"----------------------------------------\n";
+    std::cout<<"Starting evolution...\n";
+    std::cout<<"verbose output enabled\n";
+    std::cout<<"----------------------------------------\n";
+
+    #endif
+
     std::cout<<argc<<"\n";
-    if(argc!=12){
+    if(argc!=15){
         usage(argv[0]);
         return 0;
     }
@@ -113,6 +122,7 @@ int main(int argc, char** argv){
     // std::srand ( unsigned ( config.rand_seed ) );
     
     std::random_shuffle(hgt_pool.begin(), hgt_pool.end());
+    
     if(hgt_pool.size() > 1){
         std::cout<<hgt_pool[0].substr(0,50)<<"\n";
         std::cout<<hgt_pool[1].substr(0,50)<<"\n";
@@ -156,10 +166,19 @@ int main(int argc, char** argv){
 
 
     //std::map<int,int> genome_parents;
-    
 
     //std::map<GeneID,GeneID> gene_parents;
     std::map< std::pair<int,int>, std::pair<int,int> > gene_parents;
+
+    // for chimeras records. this vector keeps track of all the chimeras that
+    //  are generated during the evolution.
+    //  the key of the map is a pair of integers (acceptor_genome_id,
+    //  acceptor_gene_id) that identifies the gene to which the contribution
+    // is added. the value is a ChimeraRecord struct that contains the list
+    // of contributions that are added to the acceptor gene.
+    // std::map<std::pair<int,int>, ChimeraRecord> chimeras;
+    
+    ChimeraLog chimera_log;
 
     //std::vector<Genome*> genomes;
     std::map<int, Genome*> genomes;
@@ -171,12 +190,7 @@ int main(int argc, char** argv){
         gene_parents[ std::pair<int,int>(0, l.id) ] = std::pair<int,int>(-1, -1);
     }
 
-    // std::mt19937_64 rng;
-    // rng.seed(config.rand_seed);
-    // std::uniform_real_distribution<double> unif(0, 1);
-
     int global_gene_id = root_genome->loci.size();
-
 
     //for(int run =0; run < NOF_GENOMES; run++){
     std::queue<int> treequeue;
@@ -196,9 +210,9 @@ int main(int argc, char** argv){
 
 
     for(Locus &l : root_genome->loci){
-       if(l.end >= root_genome->sequence.size()){
-           std::cout<<"invalid loci end on root genome "<<l.end<<" "<<root_genome->sequence.size()<<"\n";
-           exit(1);
+        if(l.end >= root_genome->sequence.size()){
+            std::cout<<"invalid loci end on root genome "<<l.end<<" "<<root_genome->sequence.size()<<"\n";
+            exit(1);
         }
     }
 
@@ -275,6 +289,7 @@ int main(int argc, char** argv){
                 int total_altered = 0;
                 for(int p=0; p<gene_length; p++){
                     if(!constrained[p]){
+                        
                         if( generate_unif() <= config.locus_variation_prob){
                             total_altered++;
                             int alteration = randint(0,4);
@@ -496,6 +511,7 @@ int main(int argc, char** argv){
                     }
                 }
              }
+
         }
 
         for(Locus &l : new_genome->loci){
@@ -741,7 +757,259 @@ int main(int argc, char** argv){
         std::cout<<"the new genome has a total of "<<new_genome->loci.size()<<" genetic loci\n";
         std::cout<<"the length of the new genome is "<<new_genome->sequence.size()<<" nucleotides\n";
 
-        //genomes.push_back(new_genome);
+
+        // ---------------------
+        // ---------------------
+        // Gene fusion section beginning
+        // ---------------------
+        // ---------------------
+
+        if( generate_unif() <= config.gene_fusion_prob ){
+#ifdef VERBOSE
+std::cout << "fusing in genome " << current_genome_id << "\n";
+#endif
+            // ---------------------
+            // duplication - max 1 duplication event per genome
+            // ---------------------
+            if (generate_unif() <= config.sub_gene_duplication_prob) {
+
+                if (new_genome->loci.size() == 0) {
+                    // no genes to duplicate, skipping
+                    std::cout<<"no genes to duplicate, skipping\n";
+                } else {
+                    // random source gene
+                    int source_gene_index = randint(new_genome->loci.size());
+
+                    const Locus source_gene = new_genome->loci[source_gene_index];
+                    int source_gene_len = source_gene.end - source_gene.start;
+                    if (source_gene_len < 3 ) {
+                        // gene to short
+                        std::cout<<"source gene too short for sub-gene duplication, skipping\n";
+                    } else {
+
+                        //  i must keep x3 pattern
+                        int source_gene_total_codons = source_gene_len / 3;
+                        int source_gene_min_codon_start = 1;
+                        int source_gene_max_codon_start = source_gene_total_codons - 1;
+
+                        if (source_gene_max_codon_start - source_gene_min_codon_start < 1) {
+                            // gene too short for sub-gene duplication, skipping
+                            std::cout<<"source gene too short for sub-gene duplication, skipping\n";
+                        
+                        } else {
+                        
+                            int source_gene_codon1 = randint(source_gene_min_codon_start, source_gene_max_codon_start); // [first..last)
+                            int source_gene_codon2 = randint(source_gene_codon1 + 1, source_gene_max_codon_start + 1); // [c1+1..last]
+
+                            int source_gene_range_offset = 3 * source_gene_codon1;
+                            int source_gene_range_length = 3 * (source_gene_codon2 - source_gene_codon1);
+                            int source_gene_absolute_start = source_gene.start + source_gene_range_offset;
+
+                            std::string source_gene_sub_seq = new_genome->sequence.substr(source_gene_absolute_start, source_gene_range_length);
+
+
+                            // dice if same gene or not
+                            if (generate_unif() <= config.intrasub_gene_duplication_prob) { // same gene
+
+                                // concat to the end of duplication site
+#ifdef VERBOSE
+std::cout << "duplicating a sequence of length " << source_gene_range_length << " from gene " << source_gene.id << " at offset " << source_gene_range_offset << " to the same gene\n";
+#endif
+                                new_genome->sequence = 
+                                    new_genome->sequence.substr(0, source_gene_absolute_start + source_gene_range_length) +
+                                    source_gene_sub_seq +
+                                    new_genome->sequence.substr(source_gene_absolute_start + source_gene_range_length);
+
+
+                                // update loci positions
+                                for (Locus& l : new_genome->loci) {
+                                    if (l.end <= source_gene_absolute_start + source_gene_range_length) {
+                                        // skip: gene before the insertion point, no shift
+                                    } else if (l.start >= source_gene_absolute_start + source_gene_range_length) {
+                                        // gene after the insertion point: shift both start and end
+                                        l.start += source_gene_range_length;
+                                        l.end   += source_gene_range_length;
+                                    } else {
+                                        // gene that crosses the insertion point (= the source): only end advances
+                                        l.end += source_gene_range_length;
+                                    }
+                                }
+
+                                
+                                ChimeraContribution chimera_contrib = make_chimera_contribution(
+                                    std::move(make_locus(
+                                        current_genome_id,
+                                        source_gene.id
+                                    )),
+                                    source_gene_range_offset,
+                                    source_gene_range_length
+                                    #ifdef DEBUG
+                                    , source_gene_sub_seq
+                                    #endif
+                                );
+#ifdef VERBOSE
+std::cout << "recording chimera contribution: source gene " << source_gene.id << " (offset " << source_gene_range_offset << ", length " << source_gene_range_length << ") contributes to the same gene " << source_gene.id << " at offset " << source_gene_absolute_start + source_gene_range_length << "\n";
+std::cout << "dump of the chimera contribution:\n" << chimera_contrib << "\n";
+#endif
+                                std::vector<ChimeraContribution> contributions = {chimera_contrib};
+                                
+                                ChimeraRecord chimera_record = make_chimera_record(
+                                    ChimeraEventType::GENE_FUSION_INTRA_SUB_GENE_DUPLICATION,
+                                    std::move(
+                                        make_chimera_acceptor(
+                                            std::move(
+                                                make_locus(
+                                                current_genome_id,
+                                                source_gene.id
+                                                )
+                                            ),
+                                            source_gene_absolute_start + source_gene_range_length
+                                        )
+                                    ),
+                                    std::move(contributions)
+                                );
+
+#ifdef VERBOSE
+std::cout << "dump of the chimera record:\n" << chimera_record << "\n";
+#endif
+                                
+                                chimera_log.add_chimera_event(std::move(chimera_record));
+#ifdef DEBUG
+chimera_contrib.contribution_sequence = source_gene_sub_seq;
+#endif
+
+                            } else if (generate_unif() <= config.intersub_gene_duplication_prob) { // different gene
+
+                                // select a random gene and a random position in it, and insert the duplicated sequence there
+
+                                // generate a random gene target index, if it is the same gene as the source,
+                                // the index is re-generated until a different gene is selected.
+                                int target_gene_index = source_gene_index;
+                                while (target_gene_index == source_gene_index) {
+                                    target_gene_index = randint(new_genome->loci.size());
+                                    if (target_gene_index == source_gene_index) {
+                                        std::cout << "same gene selected for duplication, re-rolling\n";
+                                    }
+                                }
+
+                                // select a random position in the target gene and insert the duplicated sequence there
+                                Locus& target_gene = new_genome->loci[target_gene_index];
+                                int target_gene_len = target_gene.end - target_gene.start;
+                                int target_total_codons = target_gene_len / 3;
+                                if (target_total_codons < 2) {
+                                    // target to short
+                                    std::cout << "target gene too short, skipping\n";
+                                } else {
+                                    int target_gene_insert_position = randint(1, target_total_codons); // [1..target_total_codons-1]
+                                    int target_gene_insert_offset = 3 * target_gene_insert_position;
+                                    int target_gene_insert_pos = target_gene.start + target_gene_insert_offset;
+
+                                    new_genome->sequence =
+                                        new_genome->sequence.substr(0, target_gene_insert_pos) +
+                                        source_gene_sub_seq +
+                                        new_genome->sequence.substr(target_gene_insert_pos);
+
+                                    // update loci positions
+                                    for (Locus& l : new_genome->loci) {
+                                        if (l.end <= target_gene_insert_pos) {
+                                            // skip: gene before the insertion point, no shift
+                                        } else if (l.start >= target_gene_insert_pos) {
+                                            // gene after the insertion point: shift both start and end
+                                            l.start += source_gene_range_length;
+                                            l.end   += source_gene_range_length;
+                                        } else {
+                                            // gene that crosses the insertion point (= the target): only end advances
+                                            l.end += source_gene_range_length;
+                                        }
+                                    }
+
+                                    // tracking contribution to chimera
+                                    ChimeraContribution chimera_contrib = make_chimera_contribution(
+                                        std::move(make_locus(
+                                            current_genome_id,
+                                            source_gene.id
+                                        )),
+                                        source_gene_range_offset,
+                                        source_gene_range_length
+                                        #ifdef DEBUG
+                                        , source_gene_sub_seq
+                                        #endif
+                                    );
+#ifdef VERBOSE
+std::cout << "recording chimera contribution: source gene " << source_gene.id << " (offset " << source_gene_range_offset << ", length " << source_gene_range_length << ") contributes to target gene " << target_gene.id << " at offset " << target_gene_insert_pos << "\n";
+std::cout << "dump of the chimera contribution:\n" << chimera_contrib << "\n";
+#endif
+                                    std::vector<ChimeraContribution> contributions = {chimera_contrib};
+                                    
+                                    ChimeraRecord chimera_record = make_chimera_record(
+                                        ChimeraEventType::GENE_FUSION_INTER_SUB_GENE_DUPLICATION,
+                                        std::move(
+                                            make_chimera_acceptor(
+                                                std::move(
+                                                    make_locus(
+                                                        current_genome_id,
+                                                        target_gene.id
+                                                    )
+                                                ),
+                                                target_gene_insert_pos
+                                            )
+                                        ),
+                                        std::move(contributions)
+                                    );
+
+#ifdef VERBOSE
+std::cout << "dump of the chimera record:\n" << chimera_record << "\n";
+#endif
+                                    chimera_log.add_chimera_event(std::move(chimera_record));
+
+                                    #ifdef VERBOSE
+                                    std::cout << "recording chimera contribution: source gene " << source_gene.id << " (offset " << source_gene_range_offset << ", length " << source_gene_range_length <<
+                                        ") contributes to target gene " << target_gene.id << " at offset " << target_gene_insert_pos << "\n";
+                                    #endif
+                                    #ifdef DEBUG
+                                    chimera_contrib.contribution_sequence = source_gene_sub_seq;
+                                    #endif
+
+                                    // check if the new genome is valid
+                                    for (Locus& l : new_genome->loci) {
+                                        if (l.end >= (int)new_genome->sequence.size()) {
+                                            std::cout << "(chimera dup) invalid loci end "
+                                                        << l.end << " " << new_genome->sequence.size() << "\n";
+                                            exit(1);
+                                        }
+                                    }
+
+                                }
+                            } else { // no duplication, skipping
+                                std::cout << "no duplication: duplicated sequence dropped, skipping\n";
+                            }
+
+                        }
+                    }
+                }
+            }
+
+
+            // ---------------------
+            // extended deletion - max 1 extended deletion event per genome
+            // ---------------------
+
+            // TODO: other fusion events
+            // extended deletion
+            // if (generate_unif() <= config.extended_gene_deletion_prob) {
+                // TODO add keep prob -> if, drop otherwise
+            // }
+
+        }
+
+        // ---------------------
+        // ---------------------
+        // Gene fission section beginning
+        // ---------------------
+        // ---------------------
+        // TODO
+
+        // add new genome to the population
         genomes[current_genome_id] = new_genome;
 
         std::cout<<"----------------------------------------\n";
@@ -819,4 +1087,8 @@ int main(int argc, char** argv){
     myfile.flush();
     myfile.close();
 
+    std::cout<<"writing chimera events "<<oprefix<<".chimeras.csv\n";
+    chimera_log.write_to_csv(oprefix + ".chimeras.csv");
+    std::cout<<"writing chimera events "<<oprefix<<".chimeras.tsv\n";
+    chimera_log.write_to_tsv(oprefix + ".chimeras.tsv");
 };
