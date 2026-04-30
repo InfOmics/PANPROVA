@@ -885,6 +885,7 @@ chimera_contrib.contribution_sequence = source_gene_sub_seq;
                                 // generate a random gene target index, if it is the same gene as the source,
                                 // the index is re-generated until a different gene is selected.
                                 int target_gene_index = source_gene_index;
+                                // ! if the genome has only one gene, this would be an infinite loop
                                 while (target_gene_index == source_gene_index) {
                                     target_gene_index = randint(new_genome->loci.size());
                                     if (target_gene_index == source_gene_index) {
