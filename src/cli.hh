@@ -17,7 +17,17 @@ struct EvolveConfig {
     double geneset_variation_add;   // argv[10]
     double geneset_variation_remove;// = 1 - add
     int   rand_seed;               // argv[11]
-    
+    double gene_fusion_prob;       // argv[12]
+    double sub_gene_duplication_prob; // argv[13]
+    double intrasub_gene_duplication_prob; // argv[14]
+    double intersub_gene_duplication_prob; // 1 - argv[14]
+
+    double sub_gene_extended_deletion_prob; // argv[15] not used
+    // the following parameters includes the maximum number of genes that can be deleted in an extended deletion event.
+    // genes on the both ends of the deleted region are not included in the count.
+    int min_gene_number_per_extended_deletion; // argv[16] not used
+    int max_gene_number_per_extended_deletion; // argv[17] not used
+    double gene_fission_prob;       // argv[xx] not used
 };
 
 
@@ -45,11 +55,29 @@ void parse_args(int argc, char** argv, EvolveConfig &config){
     config.geneset_variation_add = atof(argv[10]);
     config.geneset_variation_remove = 1.0 - config.geneset_variation_add;
     config.rand_seed = atoi(argv[11]);
+
+    // ---------------------
+    // Gene fusion parameters
+    // ---------------------
+    config.gene_fusion_prob = atof(argv[12]);
+    
+    // sub-gene duplication parameters
+    config.sub_gene_duplication_prob = atof(argv[13]);
+    config.intrasub_gene_duplication_prob = atof(argv[14]);
+    config.intersub_gene_duplication_prob = 1 - config.intrasub_gene_duplication_prob;
+    // sub-gene extended deletion parameters
+    // TODO
+
+
+    // ---------------------
+    // Gene fission parameters
+    // ---------------------
+    config.gene_fission_prob = 0; // atof(argv[xx])
 }
 
 
 void usage(std::string cmd){
-    std::cout<<"Usage: "<<cmd<<" root_genome.peg hgt_pool.hgt oprefix tree.genome_parents sub_matrix GENE_VARIATION_PROB LOCUS_VARIATION_PROB GENE_DUPLICATION_PROB GENESET_VARIATION GENESET_VARIATION_ADD RAND_SEED\n";
+    std::cout<<"Usage: "<<cmd<<" root_genome.peg hgt_pool.hgt oprefix tree.genome_parents sub_matrix GENE_VARIATION_PROB LOCUS_VARIATION_PROB GENE_DUPLICATION_PROB GENESET_VARIATION GENESET_VARIATION_ADD RAND_SEED GENE_FUSION_PROB SUB_GENE_DUPLICATION_PROB INTRA_SUB_GENE_DUPLICATION_PROB INTER_SUB_GENE_DUPLICATION_PROB\n";
 }
 
 #endif
