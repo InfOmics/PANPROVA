@@ -22,11 +22,17 @@ struct EvolveConfig {
     double intrasub_gene_duplication_prob; // argv[14]
     double intersub_gene_duplication_prob; // 1 - argv[14]
 
-    double sub_gene_extended_deletion_prob; // argv[15] not used
-    // the following parameters includes the maximum number of genes that can be deleted in an extended deletion event.
-    // genes on the both ends of the deleted region are not included in the count.
-    int min_gene_number_per_extended_deletion; // argv[16] not used
-    int max_gene_number_per_extended_deletion; // argv[17] not used
+    double sub_gene_extended_deletion_prob; // argv[15]
+    // the following parameters includes the maximum number of genes that can
+    // be involved in an extended deletion event.
+    // the min number must be at least 1, and the max number must be at least equal to the min number.
+    // if the min and max number are both set to 1, then the extended deletion event will be equivalent
+    // to the deletion of a subsequence of a two consecutive genes.
+    int min_gene_number_per_extended_deletion; // argv[16]
+    int max_gene_number_per_extended_deletion; // argv[17]
+    double reuse_deleted_genes_prob; // argv[18]
+    double discard_deleted_genes_prob; // 1- argv[18]
+
     double gene_fission_prob;       // argv[xx] not used
 };
 
@@ -65,9 +71,27 @@ void parse_args(int argc, char** argv, EvolveConfig &config){
     config.sub_gene_duplication_prob = atof(argv[13]);
     config.intrasub_gene_duplication_prob = atof(argv[14]);
     config.intersub_gene_duplication_prob = 1 - config.intrasub_gene_duplication_prob;
-    // sub-gene extended deletion parameters
-    // TODO
 
+
+    // sub-gene extended deletion parameters
+    config.sub_gene_extended_deletion_prob = atof(argv[15]);
+    int min_gene_number_per_extended_deletion = atoi(argv[16]);
+    if (min_gene_number_per_extended_deletion < 1) {
+        std::cout << "Error: min_gene_number_per_extended_deletion must be at least 1\n";
+        std::cout << "Setting min_gene_number_per_extended_deletion to 1\n";
+        min_gene_number_per_extended_deletion = 1;
+    }
+    config.min_gene_number_per_extended_deletion = min_gene_number_per_extended_deletion;
+    int max_gene_number_per_extended_deletion = atoi(argv[17]);
+    if (max_gene_number_per_extended_deletion < min_gene_number_per_extended_deletion) {
+        std::cout << "Error: max_gene_number_per_extended_deletion must be at least equal to min_gene_number_per_extended_deletion\n";
+        std::cout << "Setting max_gene_number_per_extended_deletion to min_gene_number_per_extended_deletion\n";
+        max_gene_number_per_extended_deletion = min_gene_number_per_extended_deletion;
+    }
+    config.max_gene_number_per_extended_deletion = max_gene_number_per_extended_deletion;
+
+    config.reuse_deleted_genes_prob = atof(argv[18]);
+    config.discard_deleted_genes_prob = 1 - config.reuse_deleted_genes_prob;
 
     // ---------------------
     // Gene fission parameters
@@ -77,7 +101,11 @@ void parse_args(int argc, char** argv, EvolveConfig &config){
 
 
 void usage(std::string cmd){
-    std::cout<<"Usage: "<<cmd<<" root_genome.peg hgt_pool.hgt oprefix tree.genome_parents sub_matrix GENE_VARIATION_PROB LOCUS_VARIATION_PROB GENE_DUPLICATION_PROB GENESET_VARIATION GENESET_VARIATION_ADD RAND_SEED GENE_FUSION_PROB SUB_GENE_DUPLICATION_PROB INTRA_SUB_GENE_DUPLICATION_PROB INTER_SUB_GENE_DUPLICATION_PROB\n";
+    std::cout<<"Usage: "<<cmd<<" root_genome.peg hgt_pool.hgt oprefix tree.genome_parents sub_matrix \
+    GENE_VARIATION_PROB LOCUS_VARIATION_PROB GENE_DUPLICATION_PROB GENESET_VARIATION GENESET_VARIATION_ADD RAND_SEED \
+    GENE_FUSION_PROB SUB_GENE_DUPLICATION_PROB INTRA_SUB_GENE_DUPLICATION_PROB \
+    SUB_GENE_EXTENDED_DELETION_PROB MIN_GENE_NUMBER_PER_EXTENDED_DELETION MAX_GENE_NUMBER_PER_EXTENDED_DELETION \
+    REUSE_DELETED_GENES_PROB\n";
 }
 
 #endif
