@@ -33,6 +33,16 @@ struct EvolveConfig {
     double reuse_deleted_genes_prob; // argv[18]
     double discard_deleted_genes_prob; // 1- argv[18]
 
+    // ---------------------
+    // Translocation parameters
+    // ---------------------
+    // probability that a translocation event occurs in the current genome.
+    // a translocation cuts a codon-aligned sub-region from a source gene
+    // (preserving its start and stop codons) and reinserts it into a different
+    // target gene (also codon-aligned, between the target's start and stop
+    // codons). neither gene is removed; the source shrinks, the target grows.
+    double translocation_prob; // argv[19]
+
     double gene_fission_prob;       // argv[xx] not used
 };
 
@@ -94,6 +104,11 @@ void parse_args(int argc, char** argv, EvolveConfig &config){
     config.discard_deleted_genes_prob = 1 - config.reuse_deleted_genes_prob;
 
     // ---------------------
+    // Translocation parameters
+    // ---------------------
+    config.translocation_prob = atof(argv[19]);
+
+    // ---------------------
     // Gene fission parameters
     // ---------------------
     config.gene_fission_prob = 0; // atof(argv[xx])
@@ -105,7 +120,8 @@ void usage(std::string cmd){
     GENE_VARIATION_PROB LOCUS_VARIATION_PROB GENE_DUPLICATION_PROB GENESET_VARIATION GENESET_VARIATION_ADD RAND_SEED \
     GENE_FUSION_PROB SUB_GENE_DUPLICATION_PROB INTRA_SUB_GENE_DUPLICATION_PROB \
     SUB_GENE_EXTENDED_DELETION_PROB MIN_GENE_NUMBER_PER_EXTENDED_DELETION MAX_GENE_NUMBER_PER_EXTENDED_DELETION \
-    REUSE_DELETED_GENES_PROB\n";
+    REUSE_DELETED_GENES_PROB \
+    TRANSLOCATION_PROB\n";
 }
 
 #endif

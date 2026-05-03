@@ -16,6 +16,7 @@ enum class ChimeraEventType {
     GENE_FUSION_INTRA_SUB_GENE_DUPLICATION,
     GENE_FUSION_EXTENDED_DELETION_FUSION,
     GENE_FUSION_EXTENDED_DELETION_REINSERTION,
+    MUTATION_TRANSLOCATION,
     // TODO add other types of events
 };
 
@@ -33,6 +34,9 @@ event_type_to_string(const ChimeraEventType& t) {
         }
         case ChimeraEventType::GENE_FUSION_EXTENDED_DELETION_REINSERTION: {
             return "GENE_FUSION_EXTENDED_DELETION_REINSERTION";
+        }
+        case ChimeraEventType::MUTATION_TRANSLOCATION: {
+            return "MUTATION_TRANSLOCATION";
         }
     }
     return "UNKNOWN";

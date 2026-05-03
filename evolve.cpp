@@ -38,7 +38,7 @@ int main(int argc, char** argv){
     #endif
 
     std::cout<<argc<<"\n";
-    if( argc!=19 ){
+    if( argc!=20 ){
         usage(argv[0]);
         return 0;
     }
@@ -1280,6 +1280,150 @@ std::cout << "reusing deleted chunk: inserting " << insert_length
                     }
                 }
 
+            }
+
+
+            // ---------------------
+            // translocation - max 1 translocation event per genome
+            // cut a codon-aligned sub-region from a source gene and reinsert it
+            // into a different target gene. neither gene is removed; the source
+            // shrinks and the target grows. start/stop codons of both genes are
+            // preserved (cut bounds and insert point are strictly after start
+            // and strictly before stop).
+            // ---------------------
+            if (generate_unif() <= config.translocation_prob) {
+                if (new_genome->loci.size() < 2) {
+                    std::cout<<"translocation needs >= 2 genes, skipping\n";
+                } else {
+                    int source_index = randint((int)new_genome->loci.size());
+                    const Locus source_gene_t = new_genome->loci[source_index];
+                    int source_len = source_gene_t.end - source_gene_t.start;
+
+                    if (source_len < 9) {
+                        // need start + at least one middle + stop
+                        std::cout<<"translocation source gene too short (need >= 9 nt), skipping\n";
+                    } else {
+                        int source_total_codons = source_len / 3;
+
+                        // pick cut range [c1, c2) of CODON INDICES that strictly
+                        // excludes start (index 0) and stop (index total - 1):
+                        //   c1 in [1, total - 2], c2 in [c1+1, total - 1]
+                        int c1 = randint(1, source_total_codons - 1);
+                        int c2 = randint(c1 + 1, source_total_codons);
+                        int cut_length = 3 * (c2 - c1);
+                        int source_start_pre = source_gene_t.start;
+                        int cut_pos = source_start_pre + 3 * c1;
+                        int source_id = source_gene_t.id;
+
+                        std::string source_sub_seq =
+                            new_genome->sequence.substr(cut_pos, cut_length);
+
+                        // pick target_index != source_index, with sufficient length, retry budget
+                        const int max_attempts_t = 10;
+                        int target_index = -1;
+                        for (int attempt = 0; attempt < max_attempts_t; attempt++) {
+                            int candidate = randint((int)new_genome->loci.size());
+                            if (candidate == source_index) continue;
+                            int cand_len = new_genome->loci[candidate].end - new_genome->loci[candidate].start;
+                            if (cand_len >= 6) { // need start + stop
+                                target_index = candidate;
+                                break;
+                            }
+                        }
+                        if (target_index == -1) {
+                            std::cout<<"translocation: no suitable target gene, skipping\n";
+                        } else {
+                            int target_total_codons_pre =
+                                (new_genome->loci[target_index].end - new_genome->loci[target_index].start) / 3;
+                            // insert codon position in target: [1, target_total_codons - 1]
+                            // (after start codon, before stop codon)
+                            int insert_codon = randint(1, target_total_codons_pre);
+                            int insert_codon_offset = 3 * insert_codon;
+                            int target_id = new_genome->loci[target_index].id;
+
+#ifdef VERBOSE
+std::cout << "translocation: cutting " << cut_length << " nt from gene " << source_id
+          << " (codon range [" << c1 << "," << c2 << "), donor offset " << (3*c1)
+          << ") and inserting into gene " << target_id
+          << " at acceptor offset " << insert_codon_offset << " (gene-rel)\n";
+#endif
+
+                            // cut from source. Sequence shrinks by cut_length,
+                            // loci with l.start >= cut_pos + cut_length shift -cut_length;
+                            // the source itself: l.end -= cut_length (its head + tail join at cut_pos).
+                            new_genome->sequence =
+                                new_genome->sequence.substr(0, cut_pos) +
+                                new_genome->sequence.substr(cut_pos + cut_length);
+
+                            for (Locus& l : new_genome->loci) {
+                                if (l.end <= cut_pos) {
+                                    // before cut: untouched
+                                } else if (l.start >= cut_pos + cut_length) {
+                                    l.start -= cut_length;
+                                    l.end   -= cut_length;
+                                } else {
+                                    // crosses cut (= the source): only end retracts
+                                    l.end -= cut_length;
+                                }
+                            }
+
+                            // re-read target's current position (it may have
+                            // shifted by -cut_length if it was after the source).
+                            // The vector wasn't resized, so target_index is still valid.
+                            int target_start_now = new_genome->loci[target_index].start;
+                            int insert_pos = target_start_now + insert_codon_offset;
+
+                            // insert source_sub_seq at insert_pos. Sequence grows
+                            // by cut_length, loci with l.start >= insert_pos shift +cut_length.
+                            new_genome->sequence =
+                                new_genome->sequence.substr(0, insert_pos) +
+                                source_sub_seq +
+                                new_genome->sequence.substr(insert_pos);
+
+                            for (Locus& l : new_genome->loci) {
+                                if (l.end <= insert_pos) {
+                                    // before insert: untouched
+                                } else if (l.start >= insert_pos) {
+                                    l.start += cut_length;
+                                    l.end   += cut_length;
+                                } else {
+                                    // crosses insert (= the target): only end advances
+                                    l.end += cut_length;
+                                }
+                            }
+
+                            // chimera record
+                            ChimeraContribution translocation_contrib = make_chimera_contribution(
+                                std::move(make_locus(current_genome_id, source_id)),
+                                3 * c1,        // donor offset gene-relative to source PRE-CUT
+                                cut_length
+                                #ifdef DEBUG
+                                , source_sub_seq
+                                #endif
+                            );
+                            std::vector<ChimeraContribution> translocation_contribs = { translocation_contrib };
+                            // acceptor_offset is gene-relative (see Chimera.hh).
+                            ChimeraRecord translocation_record = make_chimera_record(
+                                ChimeraEventType::MUTATION_TRANSLOCATION,
+                                std::move(make_chimera_acceptor(
+                                    std::move(make_locus(current_genome_id, target_id)),
+                                    insert_codon_offset
+                                )),
+                                std::move(translocation_contribs)
+                            );
+                            chimera_log.add_chimera_event(std::move(translocation_record));
+
+                            // validate
+                            for (Locus& l : new_genome->loci) {
+                                if (l.end >= (int)new_genome->sequence.size()) {
+                                    std::cout << "(translocation) invalid loci end "
+                                              << l.end << " " << new_genome->sequence.size() << "\n";
+                                    exit(1);
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
 
