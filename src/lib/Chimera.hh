@@ -14,6 +14,8 @@ using event_id_type = unsigned int;
 enum class ChimeraEventType {
     GENE_FUSION_INTER_SUB_GENE_DUPLICATION,
     GENE_FUSION_INTRA_SUB_GENE_DUPLICATION,
+    GENE_FUSION_EXTENDED_DELETION_FUSION,
+    GENE_FUSION_EXTENDED_DELETION_REINSERTION,
     // TODO add other types of events
 };
 
@@ -25,6 +27,12 @@ event_type_to_string(const ChimeraEventType& t) {
         }
         case ChimeraEventType::GENE_FUSION_INTRA_SUB_GENE_DUPLICATION: {
             return "GENE_FUSION_INTRA_SUB_GENE_DUPLICATION";
+        }
+        case ChimeraEventType::GENE_FUSION_EXTENDED_DELETION_FUSION: {
+            return "GENE_FUSION_EXTENDED_DELETION_FUSION";
+        }
+        case ChimeraEventType::GENE_FUSION_EXTENDED_DELETION_REINSERTION: {
+            return "GENE_FUSION_EXTENDED_DELETION_REINSERTION";
         }
     }
     return "UNKNOWN";
@@ -98,7 +106,21 @@ make_chimera_contribution(
 // a chimera acceptor represents the gene (or locus) to which the contribution is added in a chimera event
 struct ChimeraAcceptor {
     GeneLocus acceptor_gene; // gene (or locus) to which the contribution is added
-    int acceptor_offset; // offset (int) inside the acceptor gene to which the contribution is added
+    // acceptor_offset is gene-relative: offset (int) inside the acceptor gene
+    // measured from acceptor_gene.start.
+    //
+    // gene-relative offsets stay valid across subsequent mutations
+    // in the same evolution step that may shift genome-absolute positions
+    // (e.g. an extended-deletion "reinsertion" inserts bytes earlier in the
+    // genome and would invalidate any genome-absolute offset previously
+    // recorded for a gene that lies after the insertion site). The acceptor
+    // gene itself moves as a block, so the relative offset within it is
+    // stable.
+    //
+    // To recover the genome-absolute position from a chimera log entry, look
+    // up the acceptor gene's post-mutation start (e.g. from the .genes file)
+    // and add this offset.
+    int acceptor_offset;
 };
 inline ChimeraAcceptor
 make_chimera_acceptor(
