@@ -28,6 +28,7 @@ gsetvarperc="0.01"
 geneaddprob="0.9"
 transtable="11"
 # TODO: update readme to include these new parameters
+numberoffusioncycles="1"
 genefusionprob="0.001"
 subgenedupprob="0.001"
 intrasubgenedupprob="0.9"
@@ -56,6 +57,7 @@ echo "[--gene-dup-prob ]: gene duplciation probability. Default value is ${gened
 echo "[--gset-var-perc ]: gene set variation percentage. Default value is ${gsetvarperc}."
 echo "[--gene-add-prob ]: gene add probability. Default value is ${geneaddprob}."
 echo "[--tran-stable ]: translation table to be used for generating translations in GBFF files. Default value is ${transtable}."
+echo "[--number-of-fusion-cycles ]: maximum number of mutation events per genome inside the gene-fusion block. Default value is ${numberoffusioncycles}."
 echo "[--gene-fusion-prob ]: gene fusion probability. Default value is ${genefusionprob}."
 echo "[--sub-gene-dup-prob ]: sub-gene duplication probability. Default value is ${subgenedupprob}."
 echo "[--intra-sub-gene-dup-prob ]: intra-sub-gene duplication probability. Default value is ${intrasubgenedupprob}."
@@ -73,7 +75,7 @@ echo "[--translocation-prob ]: translocation probability (cut a sub-region from 
 # the comma separates different long options
 # -a is for long options with single dash like -version
 # ,gene-fission-prob: F:
-options=$(getopt -l "help,oprefix:,igenome:,hgtpool:,psub:,phylo:,ngenomes:,rseed:,gene-var-prob:,loc-var-prob:,gene-dup-prob:,gset-var-perc:,gene-add-prob:,trans-table:,gene-fusion-prob:,sub-gene-dup-prob:,intra-sub-gene-dup-prob:,sub-gene-ext-del-prob:,min-gene-num-ext-del:,max-gene-num-ext-del:,reuse-deleted-genes-prob:,translocation-prob:" -o "ho:g:H:M:P:n:r:f:l:d:j:a:e:F:D:i:E:m:x:R:T:" -a -- "$@")
+options=$(getopt -l "help,oprefix:,igenome:,hgtpool:,psub:,phylo:,ngenomes:,rseed:,gene-var-prob:,loc-var-prob:,gene-dup-prob:,gset-var-perc:,gene-add-prob:,trans-table:,number-of-fusion-cycles:,gene-fusion-prob:,sub-gene-dup-prob:,intra-sub-gene-dup-prob:,sub-gene-ext-del-prob:,min-gene-num-ext-del:,max-gene-num-ext-del:,reuse-deleted-genes-prob:,translocation-prob:" -o "ho:g:H:M:P:n:r:f:l:d:j:a:e:N:F:D:i:E:m:x:R:T:" -a -- "$@")
 # set --:
 # If no arguments follow this option, then the positional parameters are unset. Otherwise, the positional parameters 
 # are set to the arguments, even if some of them begin with a ‘-’.
@@ -137,6 +139,10 @@ case $1 in
 -e|--trans-table)
     shift
 	transtable=$1
+    ;;
+-N|--number-of-fusion-cycles)
+    shift
+    numberoffusioncycles=$1
     ;;
 -F|--gene-fusion-prob)
     shift
@@ -225,6 +231,7 @@ echo "genedupprob ${genedupprob}"
 echo "gsetvarperc ${gsetvarperc}"
 echo "geneaddprob ${geneaddprob}"
 echo "transtable ${transtable}"
+echo "numberoffusioncycles ${numberoffusioncycles}"
 echo "genefusionprob ${genefusionprob}"
 echo "subgenedupprob ${subgenedupprob}"
 echo "intrasubgenedupprob ${intrasubgenedupprob}"
@@ -258,7 +265,7 @@ fi
 echo ""
 echo "################################################################################"
 echo "Everything is ready! Evolving..."
-cmd="${sdir}/evolve ${igenomefile} ${hgtpoolfile} ${oprefix} ${phylofile} ${psubfile} ${genevarprob} ${locvarprob} ${genedupprob} ${gsetvarperc} ${geneaddprob} ${rseed} ${genefusionprob} ${subgenedupprob} ${intrasubgenedupprob} ${subgeneextdelprob} ${mingenenumextdel} ${maxgenenumextdel} ${reusedeletedgenesprob} ${translocationprob}" # to add ${genefissionprob}
+cmd="${sdir}/evolve ${igenomefile} ${hgtpoolfile} ${oprefix} ${phylofile} ${psubfile} ${genevarprob} ${locvarprob} ${genedupprob} ${gsetvarperc} ${geneaddprob} ${rseed} ${numberoffusioncycles} ${genefusionprob} ${subgenedupprob} ${intrasubgenedupprob} ${subgeneextdelprob} ${mingenenumextdel} ${maxgenenumextdel} ${reusedeletedgenesprob} ${translocationprob}" # to add ${genefissionprob}
 echo "$cmd"
 $cmd
 
