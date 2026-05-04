@@ -918,9 +918,22 @@ int main(int argc, char** argv){
                                         int target_gene_insert_offset = 3 * target_gene_insert_position;
                                         int target_gene_insert_pos = target_gene.start + target_gene_insert_offset;
 
+                                        // cross-strand: if source and target are on opposite strands,
+                                        // reverse-complement the chunk before insertion.
+                                        std::string chunk_to_insert = source_gene_sub_seq;
+                                        if (source_gene.strand != target_gene.strand) {
+                                            std::reverse(chunk_to_insert.begin(), chunk_to_insert.end());
+                                            for (char& nc : chunk_to_insert) nc = Genome::rc_symbol(nc);
+#ifdef VERBOSE
+std::cout << "INTER dup cross-strand: source.strand=" << source_gene.strand
+          << " target.strand=" << target_gene.strand
+          << ", reverse-complementing chunk before insert\n";
+#endif
+                                        }
+
                                         new_genome->sequence =
                                             new_genome->sequence.substr(0, target_gene_insert_pos) +
-                                            source_gene_sub_seq +
+                                            chunk_to_insert +
                                             new_genome->sequence.substr(target_gene_insert_pos);
 
                                         // update loci positions
@@ -1020,17 +1033,46 @@ int main(int argc, char** argv){
                         std::cout<<"not enough genes to perform extended deletion, skipping\n";
                         std::cout<<"genome has "<<new_genome->loci.size()<<" genes, but at least "<<(config.min_gene_number_per_extended_deletion + 1)<<" are required\n";
                     } else {
-                        // first_gene_index in [0, size - min)
-                        int first_gene_index = randint(0, (int)new_genome->loci.size() - config.min_gene_number_per_extended_deletion);
-                        // last_gene_index in [first + min, min(size, first + max + 1))
-                        // => last_gene_index - first_gene_index in [min, max], inclusive on both ends (matches the cli.hh comment "min=max=1 => 2 consecutive genes")
-                        int last_gene_index = randint(
-                            first_gene_index + config.min_gene_number_per_extended_deletion,
-                            std::min(
-                                (int)new_genome->loci.size(),
-                                first_gene_index + config.max_gene_number_per_extended_deletion + 1
-                            )
-                        );
+                        // re-roll the [first_gene_index, last_gene_index] picking until ALL loci
+                        // in that contiguous range share the same strand.
+                        // A fusion (and any reuse-reinsertion) of mixed-strand genes produces a chimera
+                        // that has no consistent reading frame (opposite fragments
+                        // glued together would translate to nonsense).
+                        // skipping cross-strand events with a re-roll preserves the strand consistency
+                        // at the cost of reducing the mutation event rate when the genome is strand-mixed.
+                        const int max_strand_attempts = 10;
+                        int first_gene_index = -1;
+                        int last_gene_index  = -1;
+                        int range_strand     = 0;
+                        bool strand_uniform  = false;
+                        for (int attempt = 0; attempt < max_strand_attempts; attempt++) {
+                            int fi = randint(0, (int)new_genome->loci.size() - config.min_gene_number_per_extended_deletion);
+                            int li = randint(
+                                fi + config.min_gene_number_per_extended_deletion,
+                                std::min(
+                                    (int)new_genome->loci.size(),
+                                    fi + config.max_gene_number_per_extended_deletion + 1
+                                )
+                            );
+                            int rs = new_genome->loci[fi].strand;
+                            bool uniform = true;
+                            for (int idx = fi; idx <= li; idx++) {
+                                if (new_genome->loci[idx].strand != rs) { uniform = false; break; }
+                            }
+                            if (uniform) {
+                                first_gene_index = fi;
+                                last_gene_index  = li;
+                                range_strand     = rs;
+                                strand_uniform   = true;
+                                break;
+                            }
+                        }
+                        if (!strand_uniform) {
+                            std::cout<<"extended deletion: no strand-uniform [first..last] range found in "
+                                     <<max_strand_attempts<<" attempts, skipping\n";
+                            // fall through with strand_uniform == false; the rest of the block
+                            // is gated below
+                        }
 
                         // get the start and end positions of the extended deletion
                         // this subsequence must start in a random position in the first gene
@@ -1040,15 +1082,22 @@ int main(int argc, char** argv){
                         // and end strictly before the stop codon of the last gene
                         // the random "steps" must be multiples of 3 to preserve the reading frame of the genes
 
-                        const Locus& first_gene_ref = new_genome->loci[first_gene_index];
-                        const Locus& last_gene_ref  = new_genome->loci[last_gene_index];
+                        //! when strand_uniform == false, first_gene_index and last_gene_index
+                        // are -1 and these references would be out-of-range. We fall back to loci[0]
+                        // as a harmless sentinel because the rest of this block is gated on
+                        // `else if (strand_uniform) ...` below, so the references are never actually
+                        // read in the !strand_uniform path
+                        const Locus& first_gene_ref = strand_uniform ? new_genome->loci[first_gene_index] : new_genome->loci[0];
+                        const Locus& last_gene_ref  = strand_uniform ? new_genome->loci[last_gene_index]  : new_genome->loci[0];
 
-                        int first_gene_len = std::abs(first_gene_ref.end - first_gene_ref.start);
-                        int last_gene_len  = std::abs(last_gene_ref.end  - last_gene_ref.start);
+                        int first_gene_len = strand_uniform ? std::abs(first_gene_ref.end - first_gene_ref.start) : 0;
+                        int last_gene_len  = strand_uniform ? std::abs(last_gene_ref.end  - last_gene_ref.start)  : 0;
 
                         // 9 = start codon + at least one middle codon + stop codon
                         // (we need a middle codon to choose a strictly-after-start, strictly-before-stop cut point)
-                        if (first_gene_len < 9 || last_gene_len < 9) {
+                        if (!strand_uniform) {
+                            // already logged above; skip the rest of the extended-deletion event
+                        } else if (first_gene_len < 9 || last_gene_len < 9) {
                             std::cout<<"genes too short for extended deletion (need >= 9 nt each), skipping\n";
                         } else {
                             int first_gene_total_codons = first_gene_len / 3;
@@ -1210,6 +1259,13 @@ int main(int argc, char** argv){
                                 // then drops indices (first_gene_index, last_gene_index] and shifts the tail.
                                 // The "candidate == first_gene_index" filter relies on this invariant; if the
                                 // rebuild logic changes, update this comparison accordingly.
+                                
+                                // the deleted chunk is uniform-strand (enforced by the first/last_gene_index re-roll).
+                                // to preserve consistency after reinsertion,
+                                // accept only target genes whose strand matches
+                                // the chunk's strand (range_strand).
+                                //  otherwise the chunk would be
+                                // reverse-complemented at output, garbling its codons.
                                 const int max_attempts = 10;
                                 int target_idx = -1;
                                 for (int attempt = 0; attempt < max_attempts; attempt++) {
@@ -1217,10 +1273,10 @@ int main(int argc, char** argv){
                                     int candidate = randint((int)new_genome->loci.size());
                                     if (candidate == first_gene_index) continue;
                                     int cand_len = new_genome->loci[candidate].end - new_genome->loci[candidate].start;
-                                    if (cand_len >= 6) {
-                                        target_idx = candidate;
-                                        break;
-                                    }
+                                    if (cand_len < 6) continue;
+                                    if (new_genome->loci[candidate].strand != range_strand) continue; // strand-compat re-roll
+                                    target_idx = candidate;
+                                    break;
                                 }
                                 if (target_idx == -1) {
                                     std::cout << "no suitable target gene to reuse the deleted chunk, discarding\n";
@@ -1378,11 +1434,29 @@ int main(int argc, char** argv){
                                 int target_start_now = new_genome->loci[target_index].start;
                                 int insert_pos = target_start_now + insert_codon_offset;
 
-                                // insert source_sub_seq at insert_pos. Sequence grows
+                                // cross-strand: if source and target are on opposite strands,
+                                // reverse-complement the chunk before insertion. Same rationale as
+                                // the INTER sub-gene-duplication block: preserves proteome
+                                // consistency after the .genes output reverse-complements one of
+                                // the two genes.
+                                std::string chunk_to_insert = source_sub_seq;
+                                int source_strand_pre = source_gene_t.strand;
+                                int target_strand     = new_genome->loci[target_index].strand;
+                                if (source_strand_pre != target_strand) {
+                                    std::reverse(chunk_to_insert.begin(), chunk_to_insert.end());
+                                    for (char& nc : chunk_to_insert) nc = Genome::rc_symbol(nc);
+#ifdef VERBOSE
+std::cout << "translocation cross-strand: source.strand=" << source_strand_pre
+          << " target.strand=" << target_strand
+          << ", reverse-complementing chunk before insert\n";
+#endif
+                                }
+
+                                // insert chunk_to_insert at insert_pos. Sequence grows
                                 // by cut_length, loci with l.start >= insert_pos shift +cut_length.
                                 new_genome->sequence =
                                     new_genome->sequence.substr(0, insert_pos) +
-                                    source_sub_seq +
+                                    chunk_to_insert +
                                     new_genome->sequence.substr(insert_pos);
 
                                 for (Locus& l : new_genome->loci) {
