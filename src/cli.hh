@@ -45,6 +45,23 @@ struct EvolveConfig {
     // codons). neither gene is removed; the source shrinks, the target grows.
     double translocation_prob; // argv[20]
 
+    // ---------------------
+    // Inversion parameters
+    // ---------------------
+    // probability that an inversion event is attempted in the current fusion
+    // cycle. an inversion physically reverse-complements a codon-aligned
+    // sub-region; depending on where the breakpoints fall it produces either
+    // a single chimera (intra-gene case) or two chimeras (inter-gene case
+    // covering two consecutive genes on the same strand).
+    double inversion_prob;       // argv[21]
+    // given an inversion event, probability that the inversion is INTRA
+    // (both breakpoints inside the same gene). complement is INTER (two
+    // consecutive same-strand genes). intergenic inversions (breakpoints in
+    // non-coding regions) are not modeled here on purpose: they produce no
+    // chimera and would require a separate non-chimeric event log.
+    double intra_inversion_prob; // argv[22]
+    double inter_inversion_prob; // = 1 - argv[22]
+
     int number_of_fission_cycles; // argv[xx] not used the maximum number of mutation cycles that can occur in a genome.
     double gene_fission_prob;       // argv[xx] not used
 };
@@ -119,6 +136,23 @@ void parse_args(int argc, char** argv, EvolveConfig &config){
     config.translocation_prob = atof(argv[20]);
 
     // ---------------------
+    // Inversion parameters
+    // ---------------------
+    config.inversion_prob = atof(argv[21]);
+    config.intra_inversion_prob = atof(argv[22]);
+    if (config.intra_inversion_prob < 0.0) {
+        std::cout << "Error: intra_inversion_prob must be between 0 and 1\n";
+        std::cout << "Setting intra_inversion_prob to 0.0\n";
+        config.intra_inversion_prob = 0.0;
+    }
+    if (config.intra_inversion_prob > 1.0) {
+        std::cout << "Error: intra_inversion_prob must be between 0 and 1\n";
+        std::cout << "Setting intra_inversion_prob to 1.0\n";
+        config.intra_inversion_prob = 1.0;
+    }
+    config.inter_inversion_prob = 1.0 - config.intra_inversion_prob;
+
+    // ---------------------
     // Gene fission parameters
     // ---------------------
     config.number_of_fission_cycles = 0; // atoi(argv[xx]) not used
@@ -132,7 +166,8 @@ void usage(std::string cmd){
     NUMBER_OF_FUSION_CYCLES GENE_FUSION_PROB SUB_GENE_DUPLICATION_PROB INTRA_SUB_GENE_DUPLICATION_PROB \
     SUB_GENE_EXTENDED_DELETION_PROB MIN_GENE_NUMBER_PER_EXTENDED_DELETION MAX_GENE_NUMBER_PER_EXTENDED_DELETION \
     REUSE_DELETED_GENES_PROB \
-    TRANSLOCATION_PROB\n";
+    TRANSLOCATION_PROB \
+    INVERSION_PROB INTRA_INVERSION_PROB\n";
 }
 
 #endif

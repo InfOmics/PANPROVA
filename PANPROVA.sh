@@ -37,6 +37,8 @@ mingenenumextdel="1"
 maxgenenumextdel="3"
 reusedeletedgenesprob="0.5"
 translocationprob="0.001"
+inversionprob="0.001"
+intrainversionprob="0.5"
 # not used
 # genefissionprob="0.001"
 
@@ -66,6 +68,8 @@ echo "[--min-gene-num-ext-del ]: minimum number of genes per extended deletion e
 echo "[--max-gene-num-ext-del ]: maximum number of genes per extended deletion event. Default value is ${maxgenenumextdel}."
 echo "[--reuse-deleted-genes-prob ]: probability of reusing a deleted gene (vs discarding it). Default value is ${reusedeletedgenesprob}."
 echo "[--translocation-prob ]: translocation probability (cut a sub-region from one gene and reinsert it into another). Default value is ${translocationprob}."
+echo "[--inversion-prob ]: inversion probability (reverse-complement a codon-aligned sub-region; intra=within one gene, inter=across two consecutive same-strand genes). Default value is ${inversionprob}."
+echo "[--intra-inversion-prob ]: given an inversion event, probability that the inversion is INTRA (both breakpoints inside the same gene). The complement is INTER (two consecutive same-strand genes). Default value is ${intrainversionprob}."
 # echo "[--gene-fission-prob ]: gene fission probability. Default value is ${genefissionprob}."
 }
 
@@ -75,7 +79,7 @@ echo "[--translocation-prob ]: translocation probability (cut a sub-region from 
 # the comma separates different long options
 # -a is for long options with single dash like -version
 # ,gene-fission-prob: F:
-options=$(getopt -l "help,oprefix:,igenome:,hgtpool:,psub:,phylo:,ngenomes:,rseed:,gene-var-prob:,loc-var-prob:,gene-dup-prob:,gset-var-perc:,gene-add-prob:,trans-table:,number-of-fusion-cycles:,gene-fusion-prob:,sub-gene-dup-prob:,intra-sub-gene-dup-prob:,sub-gene-ext-del-prob:,min-gene-num-ext-del:,max-gene-num-ext-del:,reuse-deleted-genes-prob:,translocation-prob:" -o "ho:g:H:M:P:n:r:f:l:d:j:a:e:N:F:D:i:E:m:x:R:T:" -a -- "$@")
+options=$(getopt -l "help,oprefix:,igenome:,hgtpool:,psub:,phylo:,ngenomes:,rseed:,gene-var-prob:,loc-var-prob:,gene-dup-prob:,gset-var-perc:,gene-add-prob:,trans-table:,number-of-fusion-cycles:,gene-fusion-prob:,sub-gene-dup-prob:,intra-sub-gene-dup-prob:,sub-gene-ext-del-prob:,min-gene-num-ext-del:,max-gene-num-ext-del:,reuse-deleted-genes-prob:,translocation-prob:,inversion-prob:,intra-inversion-prob:" -o "ho:g:H:M:P:n:r:f:l:d:j:a:e:N:F:D:i:E:m:x:R:T:V:W:" -a -- "$@")
 # set --:
 # If no arguments follow this option, then the positional parameters are unset. Otherwise, the positional parameters 
 # are set to the arguments, even if some of them begin with a ‘-’.
@@ -176,6 +180,14 @@ case $1 in
     shift
     translocationprob=$1
     ;;
+-V|--inversion-prob)
+    shift
+    inversionprob=$1
+    ;;
+-W|--intra-inversion-prob)
+    shift
+    intrainversionprob=$1
+    ;;
 # -F|--gene-fission-prob)
 #     shift
 #     genefissionprob=$1
@@ -240,6 +252,8 @@ echo "mingenenumextdel ${mingenenumextdel}"
 echo "maxgenenumextdel ${maxgenenumextdel}"
 echo "reusedeletedgenesprob ${reusedeletedgenesprob}"
 echo "translocationprob ${translocationprob}"
+echo "inversionprob ${inversionprob}"
+echo "intrainversionprob ${intrainversionprob}"
 echo ""
 # echo "genefissionprob ${genefissionprob}"
 
@@ -265,7 +279,7 @@ fi
 echo ""
 echo "################################################################################"
 echo "Everything is ready! Evolving..."
-cmd="${sdir}/evolve ${igenomefile} ${hgtpoolfile} ${oprefix} ${phylofile} ${psubfile} ${genevarprob} ${locvarprob} ${genedupprob} ${gsetvarperc} ${geneaddprob} ${rseed} ${numberoffusioncycles} ${genefusionprob} ${subgenedupprob} ${intrasubgenedupprob} ${subgeneextdelprob} ${mingenenumextdel} ${maxgenenumextdel} ${reusedeletedgenesprob} ${translocationprob}" # to add ${genefissionprob}
+cmd="${sdir}/evolve ${igenomefile} ${hgtpoolfile} ${oprefix} ${phylofile} ${psubfile} ${genevarprob} ${locvarprob} ${genedupprob} ${gsetvarperc} ${geneaddprob} ${rseed} ${numberoffusioncycles} ${genefusionprob} ${subgenedupprob} ${intrasubgenedupprob} ${subgeneextdelprob} ${mingenenumextdel} ${maxgenenumextdel} ${reusedeletedgenesprob} ${translocationprob} ${inversionprob} ${intrainversionprob}" # to add ${genefissionprob}
 echo "$cmd"
 $cmd
 
