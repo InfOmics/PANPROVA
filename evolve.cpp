@@ -38,7 +38,7 @@ int main(int argc, char** argv){
     #endif
 
     std::cout<<argc<<"\n";
-    if( argc!=21 ){
+    if( argc!=23 ){
         usage(argv[0]);
         return 0;
     }
@@ -168,6 +168,7 @@ int main(int argc, char** argv){
     //std::map<int,int> genome_parents;
 
     //std::map<GeneID,GeneID> gene_parents;
+    // TODO set
     std::map< std::pair<int,int>, std::pair<int,int> > gene_parents;
 
     // for chimeras records. this vector keeps track of all the chimeras that
@@ -841,13 +842,21 @@ int main(int argc, char** argv){
                                     }
 
                                     
+                                    // intra sub-dup: donor and acceptor are the same gene.
+                                    // `source_gene` is the value-snapshot taken at the start of the
+                                    // sub-gene-duplication block (before sequence/loci were modified),
+                                    // so its start/end/strand are the at-event values.
                                     ChimeraContribution chimera_contrib = make_chimera_contribution(
                                         std::move(make_locus(
                                             current_genome_id,
                                             source_gene.id
                                         )),
                                         source_gene_range_offset,
-                                        source_gene_range_length
+                                        source_gene_range_length,
+                                        source_gene.start,
+                                        source_gene.end,
+                                        source_gene.strand,
+                                        false // intra-gene never reverse-complements the duplicated chunk
                                         #ifdef DEBUG
                                         , source_gene_sub_seq
                                         #endif
@@ -862,7 +871,7 @@ int main(int argc, char** argv){
                                     std::cout << "dump of the chimera contribution:\n" << chimera_contrib << "\n";
                                     #endif
                                     std::vector<ChimeraContribution> contributions = {chimera_contrib};
-                                    
+
                                     // acceptor_offset is gene-relative (offset within the
                                     // acceptor gene, here = the source gene). See Chimera.hh
                                     // for the cross-cutting convention.
@@ -876,7 +885,10 @@ int main(int argc, char** argv){
                                                     source_gene.id
                                                     )
                                                 ),
-                                                source_gene_range_offset + source_gene_range_length
+                                                source_gene_range_offset + source_gene_range_length,
+                                                source_gene.start,
+                                                source_gene.end,
+                                                source_gene.strand
                                             )
                                         ),
                                         std::move(contributions)
@@ -918,15 +930,26 @@ int main(int argc, char** argv){
                                         int target_gene_insert_offset = 3 * target_gene_insert_position;
                                         int target_gene_insert_pos = target_gene.start + target_gene_insert_offset;
 
+                                        // snapshot the acceptor (target) at-event values before
+                                        // the sequence/loci mutation below. After the loci shift,
+                                        // target_gene.end advances by source_gene_range_length, so
+                                        // recording the snapshot here keeps the chimera record in
+                                        // sync with the gene state at the time of the event.
+                                        int target_gene_id_at_event     = target_gene.id;
+                                        int target_gene_start_at_event  = target_gene.start;
+                                        int target_gene_end_at_event    = target_gene.end;
+                                        int target_gene_strand_at_event = target_gene.strand;
+
                                         // cross-strand: if source and target are on opposite strands,
-                                        // reverse-complement the chunk before insertion.
+                                        // reverse-complement the chunk before insertion
+                                        bool inter_dup_was_rc = (source_gene.strand != target_gene_strand_at_event);
                                         std::string chunk_to_insert = source_gene_sub_seq;
-                                        if (source_gene.strand != target_gene.strand) {
+                                        if (inter_dup_was_rc) {
                                             std::reverse(chunk_to_insert.begin(), chunk_to_insert.end());
                                             for (char& nc : chunk_to_insert) nc = Genome::rc_symbol(nc);
 #ifdef VERBOSE
 std::cout << "INTER dup cross-strand: source.strand=" << source_gene.strand
-          << " target.strand=" << target_gene.strand
+          << " target.strand=" << target_gene_strand_at_event
           << ", reverse-complementing chunk before insert\n";
 #endif
                                         }
@@ -950,14 +973,21 @@ std::cout << "INTER dup cross-strand: source.strand=" << source_gene.strand
                                             }
                                         }
 
-                                        // tracking contribution to chimera
+                                        // tracking contribution to chimera.
+                                        // donor at-event values come from `source_gene` (a value-copy
+                                        // taken before this block's mutation, so its start/end/strand
+                                        // reflect the pre-event state).
                                         ChimeraContribution chimera_contrib = make_chimera_contribution(
                                             std::move(make_locus(
                                                 current_genome_id,
                                                 source_gene.id
                                             )),
                                             source_gene_range_offset,
-                                            source_gene_range_length
+                                            source_gene_range_length,
+                                            source_gene.start,
+                                            source_gene.end,
+                                            source_gene.strand,
+                                            inter_dup_was_rc
                                             #ifdef DEBUG
                                             , source_gene_sub_seq
                                             #endif
@@ -966,13 +996,13 @@ std::cout << "INTER dup cross-strand: source.strand=" << source_gene.strand
                                         std::cout << "recording chimera contribution: source gene " << source_gene.id
                                                 << " (donor offset " << source_gene_range_offset
                                                 << ", length " << source_gene_range_length
-                                                << ") contributes to target gene " << target_gene.id
+                                                << ") contributes to target gene " << target_gene_id_at_event
                                                 << " at acceptor offset " << target_gene_insert_offset
                                                 << " (gene-rel; absolute pos " << target_gene_insert_pos << ")\n";
                                         std::cout << "dump of the chimera contribution:\n" << chimera_contrib << "\n";
                                         #endif
                                         std::vector<ChimeraContribution> contributions = {chimera_contrib};
-                                        
+
                                         // acceptor_offset is gene-relative (offset within the
                                         // acceptor = target gene). See Chimera.hh for the
                                         // cross-cutting convention.
@@ -983,10 +1013,13 @@ std::cout << "INTER dup cross-strand: source.strand=" << source_gene.strand
                                                     std::move(
                                                         make_locus(
                                                             current_genome_id,
-                                                            target_gene.id
+                                                            target_gene_id_at_event
                                                         )
                                                     ),
-                                                    target_gene_insert_offset
+                                                    target_gene_insert_offset,
+                                                    target_gene_start_at_event,
+                                                    target_gene_end_at_event,
+                                                    target_gene_strand_at_event
                                                 )
                                             ),
                                             std::move(contributions)
@@ -1117,13 +1150,19 @@ std::cout << "INTER dup cross-strand: source.strand=" << source_gene.strand
                             );
 
                             // snapshot first/last gene fields (the loci vector will be rebuilt below,
-                            // and these references would dangle)
-                            int first_gene_id    = first_gene_ref.id;
-                            int first_gene_start = first_gene_ref.start;
-                            int first_gene_end   = first_gene_ref.end;
-                            int last_gene_id     = last_gene_ref.id;
-                            int last_gene_start  = last_gene_ref.start;
-                            int last_gene_end    = last_gene_ref.end;
+                            // and these references would dangle).
+                            // strand is also captured: it must equal `range_strand` by construction
+                            // (the [first..last] range was forced strand-uniform above), but recording
+                            // it via the gene itself keeps the chimera-record snapshot path uniform
+                            // with the other event types.
+                            int first_gene_id     = first_gene_ref.id;
+                            int first_gene_start  = first_gene_ref.start;
+                            int first_gene_end    = first_gene_ref.end;
+                            int first_gene_strand = first_gene_ref.strand;
+                            int last_gene_id      = last_gene_ref.id;
+                            int last_gene_start   = last_gene_ref.start;
+                            int last_gene_end     = last_gene_ref.end;
+                            int last_gene_strand  = last_gene_ref.strand;
 
                             int deletion_start  = first_gene_deletion_start;
                             int deletion_end    = last_gene_deletion_end;
@@ -1146,11 +1185,21 @@ std::cout << "INTER dup cross-strand: source.strand=" << source_gene.strand
                             std::vector<ChimeraContribution> deleted_contribs;
                             deleted_contribs.reserve(last_gene_index - first_gene_index + 1);
 
+                            // donor at-event values for these contributions are read either from
+                            // the snapshot (first/last gene) or from the still-live loci
+                            // (intermediate genes - at this point the loci vector has not yet been
+                            // rebuilt). reverse_complemented is always false: ext-del never
+                            // physically reverse-complements the deleted material.
+
                             // first gene contributes its tail (from deletion_start to its end)
                             deleted_contribs.push_back(make_chimera_contribution(
                                 std::move(make_locus(current_genome_id, first_gene_id)),
                                 first_gene_deletion_start - first_gene_start,
-                                first_gene_end - first_gene_deletion_start
+                                first_gene_end - first_gene_deletion_start,
+                                first_gene_start,
+                                first_gene_end,
+                                first_gene_strand,
+                                false
                                 #ifdef DEBUG
                                 , new_genome->sequence.substr(first_gene_deletion_start, first_gene_end - first_gene_deletion_start)
                                 #endif
@@ -1161,7 +1210,11 @@ std::cout << "INTER dup cross-strand: source.strand=" << source_gene.strand
                                 deleted_contribs.push_back(make_chimera_contribution(
                                     std::move(make_locus(current_genome_id, g.id)),
                                     0,
-                                    g.end - g.start
+                                    g.end - g.start,
+                                    g.start,
+                                    g.end,
+                                    g.strand,
+                                    false
                                     #ifdef DEBUG
                                     , new_genome->sequence.substr(g.start, g.end - g.start)
                                     #endif
@@ -1171,7 +1224,11 @@ std::cout << "INTER dup cross-strand: source.strand=" << source_gene.strand
                             deleted_contribs.push_back(make_chimera_contribution(
                                 std::move(make_locus(current_genome_id, last_gene_id)),
                                 0,
-                                last_gene_deletion_end - last_gene_start
+                                last_gene_deletion_end - last_gene_start,
+                                last_gene_start,
+                                last_gene_end,
+                                last_gene_strand,
+                                false
                                 #ifdef DEBUG
                                 , new_genome->sequence.substr(last_gene_start, last_gene_deletion_end - last_gene_start)
                                 #endif
@@ -1208,12 +1265,23 @@ std::cout << "INTER dup cross-strand: source.strand=" << source_gene.strand
                             }
                             new_genome->loci = std::move(updated_loci);
 
-                            // record the fusion: first_gene now hosts last_gene's tail
+                            // record the fusion: first_gene now hosts last_gene's tail:
+                            // - donor (last_tail_contrib): last_gene with its pre-deletion
+                            //   start/end/strand snapshot. reverse_complemented = false (ext-del
+                            //   does not physically RC the kept tail).
+                            // - acceptor: first_gene with its pre-deletion start/end/strand.
+                            //   note: after the loci rebuild above, first_gene's `end` becomes
+                            //   `merged_new_end`; the snapshot here records the original first_gene
+                            //   extent at the moment of the event.
                             {
                                 ChimeraContribution last_tail_contrib = make_chimera_contribution(
                                     std::move(make_locus(current_genome_id, last_gene_id)),
                                     last_gene_kept_offset,
-                                    last_gene_kept_tail_length
+                                    last_gene_kept_tail_length,
+                                    last_gene_start,
+                                    last_gene_end,
+                                    last_gene_strand,
+                                    false
                                     #ifdef DEBUG
                                     , new_genome->sequence.substr(deletion_start, last_gene_kept_tail_length)
                                     #endif
@@ -1230,7 +1298,10 @@ std::cout << "INTER dup cross-strand: source.strand=" << source_gene.strand
                                     ChimeraEventType::GENE_FUSION_EXTENDED_DELETION_FUSION,
                                     std::move(make_chimera_acceptor(
                                         std::move(make_locus(current_genome_id, first_gene_id)),
-                                        first_gene_deletion_start - first_gene_start
+                                        first_gene_deletion_start - first_gene_start,
+                                        first_gene_start,
+                                        first_gene_end,
+                                        first_gene_strand
                                     )),
                                     std::move(fusion_contribs)
                                 );
@@ -1251,7 +1322,7 @@ std::cout << "INTER dup cross-strand: source.strand=" << source_gene.strand
                             // ---------------------
                             if (generate_unif() <= config.reuse_deleted_genes_prob) {
                                 // try to find a target gene different from the merged chimera (first_gene_index)
-                                // with length >= 6 (start + stop). Re-roll up to N attempts; otherwise discard.
+                                // with length >= 6 (start + stop). Re-roll up to n attempts; otherwise discard.
                                 //
                                 // INVARIANT: after the rebuild loop above, the merged chimera still lives at
                                 // updated_loci[first_gene_index]. This holds because the rebuild preserves
@@ -1290,6 +1361,14 @@ std::cout << "INTER dup cross-strand: source.strand=" << source_gene.strand
                                     int insert_length = (int)deleted_sequence.size();
                                     int target_id = target.id;
                                     int target_start = target.start;
+                                    // snapshot acceptor at-event values before the loci shift.
+                                    // "at event" for the reinsertion means post-deletion / pre-reinsertion:
+                                    // the donors in `deleted_contribs` were already snapshotted
+                                    // pre-deletion above and represent that earlier instant; the
+                                    // acceptor here is a survivor of the deletion and these values
+                                    // describe its state at the moment the deleted chunk is inserted.
+                                    int target_end_at_event    = target.end;
+                                    int target_strand_at_event = target.strand;
 
                                     #ifdef VERBOSE
                                     std::cout << "reusing deleted chunk: inserting " << insert_length
@@ -1320,7 +1399,10 @@ std::cout << "INTER dup cross-strand: source.strand=" << source_gene.strand
                                         ChimeraEventType::GENE_FUSION_EXTENDED_DELETION_REINSERTION,
                                         std::move(make_chimera_acceptor(
                                             std::move(make_locus(current_genome_id, target_id)),
-                                            insert_pos - target_start
+                                            insert_pos - target_start,
+                                            target_start,
+                                            target_end_at_event,
+                                            target_strand_at_event
                                         )),
                                         std::move(deleted_contribs)
                                     );
@@ -1401,6 +1483,12 @@ std::cout << "INTER dup cross-strand: source.strand=" << source_gene.strand
                                 int insert_codon = randint(1, target_total_codons_pre);
                                 int insert_codon_offset = 3 * insert_codon;
                                 int target_id = new_genome->loci[target_index].id;
+                                // snapshot acceptor at-event values before the cut/insert mutates loci.
+                                // strand is not changed under cut+insert, but start/end will shift, so
+                                // these must be captured here to record the pre-event state.
+                                int target_start_at_event  = new_genome->loci[target_index].start;
+                                int target_end_at_event    = new_genome->loci[target_index].end;
+                                int target_strand_at_event = new_genome->loci[target_index].strand;
 
                                 #ifdef VERBOSE
                                 std::cout << "translocation: cutting " << cut_length << " nt from gene " << source_id
@@ -1436,18 +1524,19 @@ std::cout << "INTER dup cross-strand: source.strand=" << source_gene.strand
 
                                 // cross-strand: if source and target are on opposite strands,
                                 // reverse-complement the chunk before insertion. Same rationale as
-                                // the INTER sub-gene-duplication block: preserves proteome
+                                // the inter sub-gene-duplication block preserves strand
                                 // consistency after the .genes output reverse-complements one of
-                                // the two genes.
+                                // the two genes. The decision is captured into a flag and carried
+                                // into the chimera record (see ChimeraContribution::reverse_complemented).
                                 std::string chunk_to_insert = source_sub_seq;
                                 int source_strand_pre = source_gene_t.strand;
-                                int target_strand     = new_genome->loci[target_index].strand;
-                                if (source_strand_pre != target_strand) {
+                                bool translocation_was_rc = (source_strand_pre != target_strand_at_event);
+                                if (translocation_was_rc) {
                                     std::reverse(chunk_to_insert.begin(), chunk_to_insert.end());
                                     for (char& nc : chunk_to_insert) nc = Genome::rc_symbol(nc);
 #ifdef VERBOSE
 std::cout << "translocation cross-strand: source.strand=" << source_strand_pre
-          << " target.strand=" << target_strand
+          << " target.strand=" << target_strand_at_event
           << ", reverse-complementing chunk before insert\n";
 #endif
                                 }
@@ -1471,11 +1560,17 @@ std::cout << "translocation cross-strand: source.strand=" << source_strand_pre
                                     }
                                 }
 
-                                // chimera record
+                                // chimera record: donor at-event values come from `source_gene_t`,
+                                // a value-copy taken at the start of the translocation block before
+                                // any mutation, so its start/end/strand are pre-cut.
                                 ChimeraContribution translocation_contrib = make_chimera_contribution(
                                     std::move(make_locus(current_genome_id, source_id)),
-                                    3 * c1,        // donor offset gene-relative to source PRE-CUT
-                                    cut_length
+                                    3 * c1,        // donor offset gene-relative to source pre-cut
+                                    cut_length,
+                                    source_gene_t.start,
+                                    source_gene_t.end,
+                                    source_gene_t.strand,
+                                    translocation_was_rc
                                     #ifdef DEBUG
                                     , source_sub_seq
                                     #endif
@@ -1486,7 +1581,10 @@ std::cout << "translocation cross-strand: source.strand=" << source_strand_pre
                                     ChimeraEventType::MUTATION_TRANSLOCATION,
                                     std::move(make_chimera_acceptor(
                                         std::move(make_locus(current_genome_id, target_id)),
-                                        insert_codon_offset
+                                        insert_codon_offset,
+                                        target_start_at_event,
+                                        target_end_at_event,
+                                        target_strand_at_event
                                     )),
                                     std::move(translocation_contribs)
                                 );
@@ -1497,6 +1595,242 @@ std::cout << "translocation cross-strand: source.strand=" << source_strand_pre
                                     if (l.end >= (int)new_genome->sequence.size()) {
                                         std::cout << "(translocation) invalid loci end "
                                                 << l.end << " " << new_genome->sequence.size() << "\n";
+                                        exit(1);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+
+                // ---------------------
+                // inversion - max 1 inversion event per fusion cycle
+                //
+                // physically reverse-complements a codon-aligned sub-region.
+                // we model only the two cases that produce chimeras:
+                //   intra: both breakpoints inside the same gene -> one chimera
+                //          (the gene receives its own [bp1, bp2) RC'd in place).
+                //   inter: breakpoints in two consecutive genes on the same
+                //          strand -> two chimeras (gene_A becomes head_A +
+                //          RC(head_B), gene_B becomes RC(tail_A) + tail_B).
+                
+                // ---------------------
+                if (generate_unif() <= config.inversion_prob) {
+                    if (generate_unif() <= config.intra_inversion_prob) {
+                        // ---------------- INTRA ----------------
+                        if (new_genome->loci.size() == 0) {
+                            std::cout<<"intra-inversion: no genes available, skipping\n";
+                        } else {
+                            int g_idx = randint((int)new_genome->loci.size());
+                            const Locus gene_pre = new_genome->loci[g_idx];
+                            int gene_len = gene_pre.end - gene_pre.start;
+                            // need start + >=1 middle codon + stop, with two
+                            // distinct internal codon positions, hence >=4 codons (12 nt)
+                            if (gene_len < 12) {
+                                std::cout<<"intra-inversion: gene too short (need >=12 nt), skipping\n";
+                            } else {
+                                int total_codons = gene_len / 3;
+                                // c1 in [1, total_codons-2], c2 in [c1+1, total_codons-1]
+                                int c1 = randint(1, total_codons - 1);          // [1 .. total-2]
+                                int c2 = randint(c1 + 1, total_codons);         // [c1+1 .. total-1]
+
+                                int bp1 = gene_pre.start + 3 * c1;
+                                int bp2 = gene_pre.start + 3 * c2;
+                                int chunk_length = bp2 - bp1;
+
+                                std::string chunk = new_genome->sequence.substr(bp1, chunk_length);
+                                std::reverse(chunk.begin(), chunk.end());
+                                for (char& nc : chunk) nc = Genome::rc_symbol(nc);
+
+                                new_genome->sequence =
+                                    new_genome->sequence.substr(0, bp1) +
+                                    chunk +
+                                    new_genome->sequence.substr(bp2);
+
+                                // no loci shifts: inversion preserves total length
+                                // and the affected gene's start/end are unchanged
+                                // (both breakpoints are inside the same gene).
+
+                                #ifdef VERBOSE
+                                std::cout << "intra-inversion: gene " << gene_pre.id
+                                          << " codon range [" << c1 << "," << c2 << ")"
+                                          << ", offset " << (3*c1)
+                                          << ", length " << chunk_length << " nt RC'd in place\n";
+                                #endif
+
+                                ChimeraContribution intra_inv_contrib = make_chimera_contribution(
+                                    std::move(make_locus(current_genome_id, gene_pre.id)),
+                                    3 * c1,                 // donor offset (gene-relative)
+                                    chunk_length,           // length
+                                    gene_pre.start,
+                                    gene_pre.end,
+                                    gene_pre.strand,
+                                    true                    // always reverse-complemented
+                                    #ifdef DEBUG
+                                    , chunk
+                                    #endif
+                                );
+                                std::vector<ChimeraContribution> intra_inv_contribs = { intra_inv_contrib };
+                                ChimeraRecord intra_inv_record = make_chimera_record(
+                                    ChimeraEventType::MUTATION_INVERSION_INTRA,
+                                    std::move(make_chimera_acceptor(
+                                        std::move(make_locus(current_genome_id, gene_pre.id)),
+                                        3 * c1,             // acceptor offset = same as donor (in-place)
+                                        gene_pre.start,
+                                        gene_pre.end,
+                                        gene_pre.strand
+                                    )),
+                                    std::move(intra_inv_contribs)
+                                );
+                                chimera_log.add_chimera_event(std::move(intra_inv_record));
+
+                                for (Locus& l : new_genome->loci) {
+                                    if (l.end >= (int)new_genome->sequence.size()) {
+                                        std::cout << "(intra-inversion) invalid loci end "
+                                                  << l.end << " " << new_genome->sequence.size() << "\n";
+                                        exit(1);
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        // ---------------- inter ----------------
+                        if (new_genome->loci.size() < 2) {
+                            std::cout<<"inter-inversion: need >= 2 genes, skipping\n";
+                        } else {
+                            // pick a consecutive pair (i, i+1). re-roll up to
+                            // N attempts requiring same strand, both genes
+                            // length >= 9 nt, and no overlap (gene_a.end <= gene_b.start).
+                            const int max_attempts = 10;
+                            int gene_a_idx = -1;
+                            for (int attempt = 0; attempt < max_attempts; attempt++) {
+                                int i = randint((int)new_genome->loci.size() - 1); // [0, size-2]
+                                const Locus& a_cand = new_genome->loci[i];
+                                const Locus& b_cand = new_genome->loci[i+1];
+                                if (a_cand.strand != b_cand.strand) continue;
+                                int len_a = a_cand.end - a_cand.start;
+                                int len_b = b_cand.end - b_cand.start;
+                                if (len_a < 9 || len_b < 9) continue;
+                                if (a_cand.end > b_cand.start) continue; // overlap
+                                gene_a_idx = i;
+                                break;
+                            }
+                            if (gene_a_idx == -1) {
+                                std::cout<<"inter-inversion: no suitable consecutive same-strand pair found in "
+                                         <<max_attempts<<" attempts, skipping\n";
+                            } else {
+                                const Locus gene_a_pre = new_genome->loci[gene_a_idx];
+                                const Locus gene_b_pre = new_genome->loci[gene_a_idx + 1];
+
+                                int total_codons_a = (gene_a_pre.end - gene_a_pre.start) / 3;
+                                int total_codons_b = (gene_b_pre.end - gene_b_pre.start) / 3;
+
+                                // c1 strict-after-start, strict-before-stop in A
+                                // c2 strict-after-start, strict-before-stop in B
+                                int c1 = randint(1, total_codons_a - 1); // [1 .. total_a-2]
+                                int c2 = randint(1, total_codons_b - 1); // [1 .. total_b-2]
+
+                                int bp1 = gene_a_pre.start + 3 * c1;
+                                int bp2 = gene_b_pre.start + 3 * c2;
+                                int chunk_length = bp2 - bp1;
+
+                                int head_a_length = bp1 - gene_a_pre.start;       // 3*c1
+                                int tail_a_length = gene_a_pre.end - bp1;
+                                int head_b_length = bp2 - gene_b_pre.start;       // 3*c2
+                                // tail_b_length unused but kept for clarity:
+                                // int tail_b_length = gene_b_pre.end - bp2;
+
+                                std::string chunk = new_genome->sequence.substr(bp1, chunk_length);
+                                std::reverse(chunk.begin(), chunk.end());
+                                for (char& nc : chunk) nc = Genome::rc_symbol(nc);
+
+                                new_genome->sequence =
+                                    new_genome->sequence.substr(0, bp1) +
+                                    chunk +
+                                    new_genome->sequence.substr(bp2);
+
+                                // update affected gene boundaries.
+                                // total genome length is preserved, so other
+                                // loci are not shifted. only gene_a.end and
+                                // gene_b.start change:
+                                //   new gene_a.end   = bp1 + head_b_length  (A inherits B's head, RC'd)
+                                //   new gene_b.start = bp2 - tail_a_length  (B inherits A's tail, RC'd)
+                                new_genome->loci[gene_a_idx].end       = bp1 + head_b_length;
+                                new_genome->loci[gene_a_idx + 1].start = bp2 - tail_a_length;
+
+                                #ifdef VERBOSE
+                                std::cout << "inter-inversion: gene_a id=" << gene_a_pre.id
+                                          << " (codon c1=" << c1 << ", bp1=" << bp1 << ")"
+                                          << " gene_b id=" << gene_b_pre.id
+                                          << " (codon c2=" << c2 << ", bp2=" << bp2 << ")"
+                                          << " chunk_length=" << chunk_length
+                                          << " new_a.end=" << new_genome->loci[gene_a_idx].end
+                                          << " new_b.start=" << new_genome->loci[gene_a_idx+1].start << "\n";
+                                #endif
+
+                                // record 1: gene_a is acceptor, gets RC(head_B) at offset head_a_length
+                                {
+                                    ChimeraContribution contrib = make_chimera_contribution(
+                                        std::move(make_locus(current_genome_id, gene_b_pre.id)),
+                                        0,                          // donor offset: head_B starts at gene_b's start
+                                        head_b_length,
+                                        gene_b_pre.start,
+                                        gene_b_pre.end,
+                                        gene_b_pre.strand,
+                                        true                        // RC'd by physical inversion
+                                        #ifdef DEBUG
+                                        , new_genome->sequence.substr(bp1, head_b_length)
+                                        #endif
+                                    );
+                                    std::vector<ChimeraContribution> contribs = { contrib };
+                                    ChimeraRecord rec = make_chimera_record(
+                                        ChimeraEventType::MUTATION_INVERSION_INTER,
+                                        std::move(make_chimera_acceptor(
+                                            std::move(make_locus(current_genome_id, gene_a_pre.id)),
+                                            head_a_length,           // acceptor offset (post-event frame; gene_a.start unchanged)
+                                            gene_a_pre.start,
+                                            gene_a_pre.end,
+                                            gene_a_pre.strand
+                                        )),
+                                        std::move(contribs)
+                                    );
+                                    chimera_log.add_chimera_event(std::move(rec));
+                                }
+                                // record 2: gene_b is acceptor, gets RC(tail_A) at offset 0
+                                //   (post-event frame: new gene_b.start = bp2 - tail_a_length, chunk lands there)
+                                {
+                                    ChimeraContribution contrib = make_chimera_contribution(
+                                        std::move(make_locus(current_genome_id, gene_a_pre.id)),
+                                        head_a_length,              // donor offset: tail_A starts at offset 3*c1 in gene_a
+                                        tail_a_length,
+                                        gene_a_pre.start,
+                                        gene_a_pre.end,
+                                        gene_a_pre.strand,
+                                        true
+                                        #ifdef DEBUG
+                                        , new_genome->sequence.substr(bp2 - tail_a_length, tail_a_length)
+                                        #endif
+                                    );
+                                    std::vector<ChimeraContribution> contribs = { contrib };
+                                    ChimeraRecord rec = make_chimera_record(
+                                        ChimeraEventType::MUTATION_INVERSION_INTER,
+                                        std::move(make_chimera_acceptor(
+                                            std::move(make_locus(current_genome_id, gene_b_pre.id)),
+                                            0,                       // chunk lands at the new start of gene_b
+                                            gene_b_pre.start,
+                                            gene_b_pre.end,
+                                            gene_b_pre.strand
+                                        )),
+                                        std::move(contribs)
+                                    );
+                                    chimera_log.add_chimera_event(std::move(rec));
+                                }
+
+                                for (Locus& l : new_genome->loci) {
+                                    if (l.end >= (int)new_genome->sequence.size()) {
+                                        std::cout << "(inter-inversion) invalid loci end "
+                                                  << l.end << " " << new_genome->sequence.size() << "\n";
                                         exit(1);
                                     }
                                 }
