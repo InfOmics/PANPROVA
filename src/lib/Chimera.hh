@@ -17,6 +17,14 @@ enum class ChimeraEventType {
     GENE_FUSION_EXTENDED_DELETION_FUSION,
     GENE_FUSION_EXTENDED_DELETION_REINSERTION,
     MUTATION_TRANSLOCATION,
+    // both inversion breakpoints are within the same gene. this produce
+    // a single chiemera record
+    MUTATION_INVERSION_INTRA,
+    // the two inversion breakpoints fall inside two consecutive genes
+    // (in genomic order) on the same strand. this produce 2 chimera records,
+    // one per affected gene: gene_A becomes head_A + RC(head_B), gene_B
+    // becomes RC(tail_A) + tail_B
+    MUTATION_INVERSION_INTER,
     // TODO add other types of events
 };
 
@@ -37,6 +45,12 @@ event_type_to_string(const ChimeraEventType& t) {
         }
         case ChimeraEventType::MUTATION_TRANSLOCATION: {
             return "MUTATION_TRANSLOCATION";
+        }
+        case ChimeraEventType::MUTATION_INVERSION_INTRA: {
+            return "MUTATION_INVERSION_INTRA";
+        }
+        case ChimeraEventType::MUTATION_INVERSION_INTER: {
+            return "MUTATION_INVERSION_INTER";
         }
     }
     return "UNKNOWN";
@@ -70,13 +84,33 @@ struct ChimeraContribution {
     GeneLocus contribution_gene; // gene (or locus) from which the contribution comes
     int contribution_offset; // offset (int) inside the contribution gene from which the contribution starts
     int contribution_length; // length (int) of the contribution
+
+    // snapshot of the donor gene's coordinates and strand at the moment the
+    // event was applied. recorded before the mutation modifies the genome.
+    int donor_start_at_event;
+    int donor_end_at_event;
+    int donor_strand_at_event;
+
+    // true iff the chunk was physically reverse-complemented before being
+    // inserted into the acceptor.
+    //
+    // set to true by:
+    //   - cross-strand inter sub-gene duplication
+    //   - cross-strand translocation
+    //   - every contribution of an inversion event (always, even when donor
+    //     and acceptor share the same strand)
+    bool reverse_complemented;
 #ifdef DEBUG
 std::string contribution_sequence; // the actual sequence of the contribution (for debugging purposes, not used in the chimera generation process)
 #endif
     std::ostream&
     operator<<(std::ostream& os) const {
         os << "gene " << contribution_gene.gene_id << " in genome " << contribution_gene.genome_id
-           << " (offset " << contribution_offset << ", length " << contribution_length << ")";
+           << " (offset " << contribution_offset << ", length " << contribution_length
+           << ", donor@event start=" << donor_start_at_event
+           << " end=" << donor_end_at_event
+           << " strand=" << donor_strand_at_event
+           << ", rc=" << (reverse_complemented ? "true" : "false") << ")";
 #ifdef DEBUG
         os << ", sequence: " << contribution_sequence;
 #endif
@@ -92,7 +126,9 @@ operator<<(std::ostream& os, const ChimeraContribution& c) {
 inline ChimeraContribution
 make_chimera_contribution(
     const GeneLocus& contribution_gene, const int contribution_offset,
-    const int contribution_length
+    const int contribution_length,
+    const int donor_start_at_event, const int donor_end_at_event,
+    const int donor_strand_at_event, const bool reverse_complemented
 #ifdef DEBUG
     , const std::string& contribution_sequence = ""
 #endif
@@ -101,6 +137,10 @@ make_chimera_contribution(
     c.contribution_gene = contribution_gene;
     c.contribution_offset = contribution_offset;
     c.contribution_length = contribution_length;
+    c.donor_start_at_event = donor_start_at_event;
+    c.donor_end_at_event = donor_end_at_event;
+    c.donor_strand_at_event = donor_strand_at_event;
+    c.reverse_complemented = reverse_complemented;
 #ifdef DEBUG
     c.contribution_sequence = contribution_sequence;
 #endif
@@ -123,16 +163,36 @@ struct ChimeraAcceptor {
     //
     // To recover the genome-absolute position from a chimera log entry, look
     // up the acceptor gene's post-mutation start (e.g. from the .genes file)
-    // and add this offset.
+    // and add this offset, or use `acceptor_start_at_event` below to recover
+    // the position at the time of the event
     int acceptor_offset;
+
+    // snapshot of the acceptor gene's coordinates and strand at the moment
+    // the event was applied. recorded before the mutation modifies the
+    // genome (so e.g. for an inter duplication these are the target gene's
+    // start/end before the inserted chunk extends `end`).
+    //
+    // same as the donor_*_at_event fields on ChimeraContribution:
+    // subsequent mutations (in particular MUTATION_INVERSION) can re-map
+    // start/end and flip strand for the same acceptor gene id; the snapshot
+    // preserves the at-event state so a single record stays interpretable
+    // without replaying the mutation history.
+    int acceptor_start_at_event;
+    int acceptor_end_at_event;
+    int acceptor_strand_at_event;
 };
 inline ChimeraAcceptor
 make_chimera_acceptor(
-    const GeneLocus& acceptor_gene, const int acceptor_offset
+    const GeneLocus& acceptor_gene, const int acceptor_offset,
+    const int acceptor_start_at_event, const int acceptor_end_at_event,
+    const int acceptor_strand_at_event
 ) {
     ChimeraAcceptor a;
     a.acceptor_gene = acceptor_gene;
     a.acceptor_offset = acceptor_offset;
+    a.acceptor_start_at_event = acceptor_start_at_event;
+    a.acceptor_end_at_event = acceptor_end_at_event;
+    a.acceptor_strand_at_event = acceptor_strand_at_event;
     return a;
 }
 
@@ -148,7 +208,11 @@ struct ChimeraRecord {
     std::ostream&
     operator<<(std::ostream& os) const {
         os << "event type: " << event_type_to_string(event_type) << "\n";
-        os << "acceptor gene: " << acceptor.acceptor_gene.gene_id << " in genome " << acceptor.acceptor_gene.genome_id << " (offset " << acceptor.acceptor_offset << ")\n";
+        os << "acceptor gene: " << acceptor.acceptor_gene.gene_id << " in genome " << acceptor.acceptor_gene.genome_id
+           << " (offset " << acceptor.acceptor_offset
+           << ", acceptor@event start=" << acceptor.acceptor_start_at_event
+           << " end=" << acceptor.acceptor_end_at_event
+           << " strand=" << acceptor.acceptor_strand_at_event << ")\n";
         os << "contributions:\n";
         for (const auto& c : contributions) {
             os << "  - " << c << "\n";
@@ -215,15 +279,22 @@ private:
         std::cout << "writing " << log_entries.size() << " chimera events to '" << filename << "'\n";
 
         // header
-        out << "event_id"            << delimiter
-            << "event_type"          << delimiter
-            << "acceptor_genome_id"  << delimiter
-            << "acceptor_gene_id"    << delimiter
-            << "acceptor_offset"     << delimiter
-            << "donor_genome_id"     << delimiter
-            << "donor_gene_id"       << delimiter
-            << "donor_offset"        << delimiter
-            << "contribution_length"
+        out << "event_id"                  << delimiter
+            << "event_type"                << delimiter
+            << "acceptor_genome_id"        << delimiter
+            << "acceptor_gene_id"          << delimiter
+            << "acceptor_offset"           << delimiter
+            << "acceptor_start_at_event"   << delimiter
+            << "acceptor_end_at_event"     << delimiter
+            << "acceptor_strand_at_event"  << delimiter
+            << "donor_genome_id"           << delimiter
+            << "donor_gene_id"             << delimiter
+            << "donor_offset"              << delimiter
+            << "contribution_length"       << delimiter
+            << "donor_start_at_event"      << delimiter
+            << "donor_end_at_event"        << delimiter
+            << "donor_strand_at_event"     << delimiter
+            << "reverse_complemented"
     #ifdef DEBUG
             << delimiter << "contribution_sequence"
     #endif
@@ -234,15 +305,22 @@ private:
             const ChimeraRecord& r = entry.record;
             event_id_type current_event_id = entry.event_id;
             for (const auto& c : r.contributions) {
-                out << current_event_id                  << delimiter
-                    << event_type_to_string(r.event_type) << delimiter
-                    << r.acceptor.acceptor_gene.genome_id << delimiter
-                    << r.acceptor.acceptor_gene.gene_id   << delimiter
-                    << r.acceptor.acceptor_offset         << delimiter
-                    << c.contribution_gene.genome_id      << delimiter
-                    << c.contribution_gene.gene_id        << delimiter
-                    << c.contribution_offset              << delimiter
-                    << c.contribution_length
+                out << current_event_id                       << delimiter
+                    << event_type_to_string(r.event_type)     << delimiter
+                    << r.acceptor.acceptor_gene.genome_id     << delimiter
+                    << r.acceptor.acceptor_gene.gene_id       << delimiter
+                    << r.acceptor.acceptor_offset             << delimiter
+                    << r.acceptor.acceptor_start_at_event     << delimiter
+                    << r.acceptor.acceptor_end_at_event       << delimiter
+                    << r.acceptor.acceptor_strand_at_event    << delimiter
+                    << c.contribution_gene.genome_id          << delimiter
+                    << c.contribution_gene.gene_id            << delimiter
+                    << c.contribution_offset                  << delimiter
+                    << c.contribution_length                  << delimiter
+                    << c.donor_start_at_event                 << delimiter
+                    << c.donor_end_at_event                   << delimiter
+                    << c.donor_strand_at_event                << delimiter
+                    << (c.reverse_complemented ? 1 : 0)
     #ifdef DEBUG
                     << delimiter << c.contribution_sequence
     #endif
@@ -303,9 +381,5 @@ public:
     }
 
 };
-
-
-
-
 
 #endif
