@@ -6,7 +6,7 @@ echo "==========================================================================
 
 echo "================================================================================"
 echo "Evolving..."
-cmd="bash ../../PANPROVA.sh --igenome ../genomes/mycoplasma_genitalium_G37.peg --hgtpool hgt_pool --ngenomes 10 --trans-table 4 --oprefix ./example"
+cmd="bash ../../PANPROVA.sh --igenome ../genomes/mycoplasma_genitalium_G37.peg --hgtpool hgt_pool --ngenomes 10 --trans-table 4 --oprefix ./example --number-of-fusion-cycles 0 --gene-fusion-prob 0"
 echo $cmd
 date
 /usr/bin/time -f"%E %M" $cmd

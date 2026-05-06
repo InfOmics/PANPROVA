@@ -19,6 +19,18 @@ genedupprob="0.001"
 gsetvarperc="0.01"
 geneaddprob="0.9"
 transtable="4"
+# fusion-block parameters: all events disabled for this benchmark
+numberoffusioncycles="0"
+genefusionprob="0"
+subgenedupprob="0"
+intrasubgenedupprob="0.5"
+subgeneextdelprob="0"
+mingenenumextdel="1"
+maxgenenumextdel="1"
+reusedeletedgenesprob="0.5"
+translocationprob="0"
+inversionprob="0"
+intrainversionprob="0.5"
 
 echo ""
 echo "Current paramters are:"
@@ -56,7 +68,7 @@ cmd="python3 ../../generate_tree.py ${ngenomes} ${rseed} ${phylofile}"
 echo "$cmd"
 /usr/bin/time -f"%E %e %M" $cmd
 
-cmd="../../evolve ${igenomefile} ${hgtpoolfile} ${oprefix} ${phylofile} ${psubfile} ${genevarprob} ${locvarprob} ${genedupprob} ${gsetvarperc} ${geneaddprob} ${rseed}"
+cmd="../../evolve ${igenomefile} ${hgtpoolfile} ${oprefix} ${phylofile} ${psubfile} ${genevarprob} ${locvarprob} ${genedupprob} ${gsetvarperc} ${geneaddprob} ${rseed} ${numberoffusioncycles} ${genefusionprob} ${subgenedupprob} ${intrasubgenedupprob} ${subgeneextdelprob} ${mingenenumextdel} ${maxgenenumextdel} ${reusedeletedgenesprob} ${translocationprob} ${inversionprob} ${intrainversionprob}"
 echo "$cmd"
 /usr/bin/time -f"%E %e %M" $cmd > evolve_${nof}.log
 
