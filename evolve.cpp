@@ -1937,8 +1937,17 @@ std::cout << "translocation cross-strand: source.strand=" << source_strand_pre
     myfile.flush();
     myfile.close();
 
-    std::cout<<"writing chimera events "<<oprefix<<".chimeras.csv\n";
-    chimera_log.write_to_csv(oprefix + ".chimeras.csv");
-    std::cout<<"writing chimera events "<<oprefix<<".chimeras.tsv\n";
-    chimera_log.write_to_tsv(oprefix + ".chimeras.tsv");
+    if (
+        config.number_of_fusion_cycles <= 0 || config.gene_fusion_prob <= 0
+    ) {
+        std::cout<<"no fusion events were possible given the configuration, skipping chimera log output\n";
+    }
+    if (
+        config.number_of_fusion_cycles > 0 && config.gene_fusion_prob > 0
+    ) {
+        std::cout<<"writing chimera events "<<oprefix<<".chimeras.csv\n";
+        chimera_log.write_to_csv(oprefix + ".chimeras.csv");
+        std::cout<<"writing chimera events "<<oprefix<<".chimeras.tsv\n";
+        chimera_log.write_to_tsv(oprefix + ".chimeras.tsv");
+    }
 };

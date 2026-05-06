@@ -300,6 +300,16 @@ cmd="python3 ${sdir}/get_pan_distrs.py  ${oprefix}.gene_parents  ${oprefix}"
 echo "$cmd"
 $cmd
 
+if [ "$numberoffusioncycles" -gt 0 ] || [ $(echo "$genefusionprob > 0" | bc -l) -eq 1 ]
+then
+    echo ""
+    echo "################################################################################"
+    echo "Extracting chimera-aware pangenomic distributions..."
+    cmd="python3 ${sdir}/get_pan_distrs_chimeric.py ${oprefix}.gene_parents ${oprefix}.chimeras.csv ${oprefix}"
+    echo "$cmd"
+    $cmd
+fi
+
 
 
 echo "################################################################################"
