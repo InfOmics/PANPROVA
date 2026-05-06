@@ -300,7 +300,7 @@ cmd="python3 ${sdir}/get_pan_distrs.py  ${oprefix}.gene_parents  ${oprefix}"
 echo "$cmd"
 $cmd
 
-if [ "$numberoffusioncycles" -gt 0 ] || [ $(echo "$genefusionprob > 0" | bc -l) -eq 1 ]
+if [ "$numberoffusioncycles" -gt 0 ] && [ $(echo "$genefusionprob > 0" | bc -l) -eq 1 ]
 then
     echo ""
     echo "################################################################################"
@@ -308,6 +308,10 @@ then
     cmd="python3 ${sdir}/get_pan_distrs_chimeric.py ${oprefix}.gene_parents ${oprefix}.chimeras.csv ${oprefix}"
     echo "$cmd"
     $cmd
+else
+    echo ""
+    echo "################################################################################"
+    echo "Skipping chimera-aware pangenomic distributions since no gene fusion is being simulated."
 fi
 
 
