@@ -87,7 +87,7 @@ eval set -- "$options"
 while true
 do
 case $1 in
--h|--help) 
+-h|--help)
     show_usage
     exit 0
     ;;
