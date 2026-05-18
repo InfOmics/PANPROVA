@@ -1,3 +1,0 @@
-# ignore all timestamped run directories produced by test scripts,
-# at any depth under tests/
-run_*/
