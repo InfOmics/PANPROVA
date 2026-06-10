@@ -27,7 +27,6 @@ genedupprob="0.001"
 gsetvarperc="0.01"
 geneaddprob="0.9"
 transtable="11"
-# TODO: update readme to include these new parameters
 numberoffusioncycles="1"
 genefusionprob="0.001"
 subgenedupprob="0.001"
