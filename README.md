@@ -15,7 +15,7 @@ A nucleotide substitution matrix is employed for nucleotide alterations. Mutatio
 The horizontal acquisition of new genes is achieved by selecting genetic sequences from a previously created pool or by randomly generating their sequence.
 The user can specify the probability of a gene being mutated, thus for each mutated gene, the probability of a nucleotide being mutated, the probability of duplicating a vertically transmitted gene and the percentage of the resultant gene set that as to be altered, by further specifying the probability of adding or removing a gene.
 
-In addition to the base evolution model, ***PANPROVA*** can simulate gene-fusion / chimera-generating mutation events: sub-gene duplication (intra-gene and inter-gene), extended deletion with optional reinsertion of the deleted chunk, translocation, and inversion (intra-gene and inter-gene). Every chimeric event is recorded in a per-run 'chimera log' (`.chimeras.csv` / `.chimeras.tsv`) which, for every contribution, stores the donor and acceptor coordinates at the moment the event was applied. When chimera events are produced, the entire pipeline generates a parallel set of chimera-aware pangenomic files that take into account the multi-family membership of chimeric genes.
+In addition to the base evolution model, ***PANPROVA*** can simulate gene-fusion / chimera-generating mutation events: sub-gene duplication (intra-gene and inter-gene), extended deletion with optional reinsertion of the deleted chunk, translocation, and inversion (intra-gene and inter-gene). Every chimeric event is recorded in a per-run 'chimera log' (`.chimeras.csv` / `.chimeras.tsv`) which, for every contribution, stores the donor and acceptor coordinates at the moment the event was applied. When chimera events are produced, the entire pipeline generates two parallel sets of chimera-aware pangenomic files, corresponding to two possible interpretations of how a chimeric gene relates to its families: a *multi-family membership* ("merge") view, in which the chimera belongs to all of its source families at once, and a *new-family* ("split") view, in which the chimera founds a brand-new gene family of its own.
 
 ----
 
@@ -120,12 +120,20 @@ In addition, when at least one gene-fusion / chimera mutation event is produced 
 
 * `[output_prefix].chimeras.csv` / `[output_prefix].chimeras.tsv`: the per-contribution log of every chimeric event produced during the simulation, in CSV and TSV formats. See section *`.chimeras.csv / .chimeras.tsv`* below for the column schema. Always emitted; if no chimera event was produced the file contains only the header row.
 
-When chimera events are produced, `PANPROVA.sh` additionally runs a chimera-aware pangenomic distribution post-processing step that emits a parallel set of pangenomic files that take into account multi-family membership of chimeric genes:
+When chimera events are produced, `PANPROVA.sh` additionally runs a chimera-aware pangenomic distribution post-processing step that emits a parallel set of pangenomic files that take into account multi-family membership of chimeric genes (the *multi-family membership* / "merge" interpretation):
 
 * `[output_prefix].chimeras.gene_families`: same format as `[output_prefix].gene_families`, but a chimeric gene is listed inside every family whose root ancestor is reachable from the gene via the union of vertical-parent edges and chimeric-donor edges.
 * `[output_prefix].chimeras.family_presence`: same format as `[output_prefix].family_presence`, computed on the chimera-aware family assignment described above.
 * `[output_prefix].chimeras.pan_distribution`: same format as `[output_prefix].pan_distribution`, computed on the chimera-aware family assignment described above.
 * `[output_prefix].chimeras.ancestry`: a flat denormalized TSV listing, for every gene, every ancestor edge. Columns are `genome_id`, `gene_id`, `relation`, `ancestor_genome_id`, `ancestor_gene_id`, `event_type`. The `relation` column is either `vertical_parent` (one row per gene, from `.gene_parents`; family roots and HGT genes use `(-1, -1)` and `event_type = "-"`) or `chimeric_donor` (one row per chimera contribution; self-donor rows for `INTRA`-* events are preserved and can be filtered by `genome_id, gene_id == ancestor_genome_id, ancestor_gene_id`).
+
+`PANPROVA.sh` then runs a second post-processing step that emits a parallel set of files implementing the alternative *new-family* ("split") interpretation, in which every genuinely chimeric gene (an acceptor that received material from at least one *other* gene) founds a brand-new gene family of its own — inherited by its vertical descendants — instead of joining its donor families:
+
+* `[output_prefix].chimeras_newfam.gene_families`: same format as `[output_prefix].gene_families`. A genuinely chimeric gene leaves its vertical family and is placed in a new `family_chimera_<genome_id>_<gene_id>` family that its vertical descendants inherit; the pre-fusion ancestor stays in the original family and every other gene resolves to its vertical family as usual. The result is a partition (every gene belongs to exactly one family).
+* `[output_prefix].chimeras_newfam.family_presence`: same format as `[output_prefix].family_presence`, computed on the new-family assignment described above.
+* `[output_prefix].chimeras_newfam.pan_distribution`: same format as `[output_prefix].pan_distribution`, computed on the new-family assignment described above.
+
+Producing both sets of files lets you compare the two interpretations on the same run.
 
 ----
 
@@ -149,7 +157,8 @@ The internal tools are:
 * `tree2phyloxml.p`: a tool for converting a PANPROVA tree into a PhyloXML file and for generating an image showing it.
 * `evolve`: a C++ executable that implements the evolution procedure and gene-fusion events.
 * `get_pan_distrs.py`: a Python script for retrieving pangenomic information from the generated population and for creating the corresponding output.
-* `get_pan_distrs_chimeric.py`: a Python script that produces the chimera-aware pangenomic distributions by combining `.gene_parents` with `.chimeras.csv`. It is invoked by `PANPROVA.sh` whenever at least one chimera event is produced and emits the `.chimeras.{gene_families,family_presence,pan_distribution,ancestry}` files.
+* `get_pan_distrs_chimeric.py`: a Python script that produces the chimera-aware pangenomic distributions (multi-family membership interpretation) by combining `.gene_parents` with `.chimeras.csv`. It is invoked by `PANPROVA.sh` whenever at least one chimera event is produced and emits the `.chimeras.{gene_families,family_presence,pan_distribution,ancestry}` files.
+* `get_pan_distrs_chimeric_newfam.py`: a Python script that produces the alternative *new-family* chimera-aware pangenomic distributions from the same `.gene_parents` and `.chimeras.csv` inputs. It is invoked by `PANPROVA.sh` alongside `get_pan_distrs_chimeric.py` whenever at least one chimera event is produced and emits the `.chimeras_newfam.{gene_families,family_presence,pan_distribution}` files.
 * `pegs2gxx.py`: a Python script for converting the generated genomes into the GBK and GFF+FASTA formats.
 
 ----
@@ -284,7 +293,10 @@ The columns are:
 | `reverse_complemented` | int | `1` if the chunk was physically reverse-complemented before being inserted into the acceptor, `0` otherwise. Set to `1` for: cross-strand inter sub-gene duplication, cross-strand translocation, and every contribution of any inversion event. |
 
 ### .chimeras.gene_families / .chimeras.family_presence / .chimeras.pan_distribution
-These files share the format of `.gene_families`, `.family_presence` and `.pan_distribution` respectively. They differ only in how family membership is computed: a chimeric gene is listed inside every family whose root ancestor is reachable via the union of vertical-parent edges (`.gene_parents`) and chimeric-donor edges (`.chimeras.csv`). A non-chimeric gene appears in exactly one family, exactly as in the corresponding non-chimera-aware file.
+These files share the format of `.gene_families`, `.family_presence` and `.pan_distribution` respectively. They differ only in how family membership is computed: a chimeric gene is listed inside every family whose root ancestor is reachable via the union of vertical-parent edges (`.gene_parents`) and chimeric-donor edges (`.chimeras.csv`). A non-chimeric gene appears in exactly one family, exactly as in the corresponding non-chimera-aware file. This is the *multi-family membership* ("merge") interpretation: a chimeric gene can belong to several families at once, so these files are **not** a partition of the genes.
+
+### .chimeras_newfam.gene_families / .chimeras_newfam.family_presence / .chimeras_newfam.pan_distribution
+These files share the format of `.gene_families`, `.family_presence` and `.pan_distribution` respectively, and implement the alternative *new-family* ("split") interpretation of a chimeric gene (as opposed to the multi-family membership of the `.chimeras.*` files). A gene is considered *genuinely chimeric* if it is the acceptor of at least one contribution whose donor is a different gene; self-donor `INTRA_*` events do not count, consistently with the `.chimeras.*` files, whose traversal also skips self-donor edges. Each genuinely chimeric gene founds a brand-new family labelled `family_chimera_<genome_id>_<gene_id>`, which is inherited by its vertical descendants, while its pre-fusion ancestor stays in the original family. Every other gene resolves to its vertical-lineage family exactly as in `.gene_families`. Unlike the `.chimeras.*` files, the result is a strict partition: every gene belongs to exactly one family.
 
 ### .chimeras.ancestry
 A flat denormalized TSV listing, for every gene, every ancestor edge. The first line is a header.
@@ -382,7 +394,7 @@ This example exercises the translocation branch. It evolves 10 genomes with `--t
 To run the example, enter in the example directory and run `bash run_example.sh`.
 
 ### Test 12 : gene-fusion / all events together
-This example combines every chimera-generating mutation in a single run, with all probabilities at intermediate values (`--gene-fusion-prob 1.0`, `--sub-gene-dup-prob 0.5`, `--intra-sub-gene-dup-prob 0.5`, `--sub-gene-ext-del-prob 0.5`, `--reuse-deleted-genes-prob 0.5`, `--translocation-prob 0.5`, `--inversion-prob 0.5`, `--intra-inversion-prob 0.5`). It is the most representative example for inspecting the full set of `event_type` values in the chimera log and for exercising the chimera-aware pangenomic post-processing step that emits the `[output_prefix].chimeras.{gene_families,family_presence,pan_distribution,ancestry}` files.
+This example combines every chimera-generating mutation in a single run, with all probabilities at intermediate values (`--gene-fusion-prob 1.0`, `--sub-gene-dup-prob 0.5`, `--intra-sub-gene-dup-prob 0.5`, `--sub-gene-ext-del-prob 0.5`, `--reuse-deleted-genes-prob 0.5`, `--translocation-prob 0.5`, `--inversion-prob 0.5`, `--intra-inversion-prob 0.5`). It is the most representative example for inspecting the full set of `event_type` values in the chimera log and for exercising both chimera-aware pangenomic post-processing steps: the one that emits the multi-family-membership `[output_prefix].chimeras.{gene_families,family_presence,pan_distribution,ancestry}` files and the one that emits the new-family `[output_prefix].chimeras_newfam.{gene_families,family_presence,pan_distribution}` files.
 To run the example, enter in the example directory and run `bash run_example.sh`.
 
 ----

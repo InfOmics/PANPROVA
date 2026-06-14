@@ -304,7 +304,12 @@ then
     echo ""
     echo "################################################################################"
     echo "Extracting chimera-aware pangenomic distributions..."
+    echo "  (A) multi-membership: a chimera joins its donor families"
     cmd="python3 ${sdir}/get_pan_distrs_chimeric.py ${oprefix}.gene_parents ${oprefix}.chimeras.csv ${oprefix}"
+    echo "$cmd"
+    $cmd
+    echo "  (B) new-family: a chimera founds its own family"
+    cmd="python3 ${sdir}/get_pan_distrs_chimeric_newfam.py ${oprefix}.gene_parents ${oprefix}.chimeras.csv ${oprefix}"
     echo "$cmd"
     $cmd
 else
